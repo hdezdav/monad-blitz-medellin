@@ -26,15 +26,67 @@ export function FoxIcon({ className }) {
 // Real WalletConnect Icon SVG
 export function WalletConnectIcon({ className }) {
   return (
-    <svg viewBox="0 0 40 40" className={className} aria-hidden="true" fill="none">
-      <path
-        d="M29.5 14.5c-5.2-5.2-13.8-5.2-19 0l-1.4 1.4c-.6.6-.6 1.6 0 2.2l3 3c.3.3.8.3 1.1 0l1.4-1.4c3.3-3.3 8.7-3.3 12 0l1.4 1.4c.3.3.8.3 1.1 0l3-3c.6-.6.6-1.6 0-2.2l-1.4-1.4z"
-        fill="#3B99FC"
-      />
-      <path
-        d="M19.9 25c.3.3.8.3 1.1 0l6.2-6.2c.6-.6.6-1.6 0-2.2l-1.4-1.4c-.3-.3-.8-.3-1.1 0l-4.2 4.2-4.2-4.2c-.3-.3-.8-.3-1.1 0l-1.4 1.4c-.6.6-.6 1.6 0 2.2l6.2 6.2z"
-        fill="#3B99FC"
-      />
+    <img 
+      src="https://walletconnect.network/icon.png?14b0dfc4ce526451" 
+      alt="WalletConnect" 
+      className={className} 
+    />
+  );
+}
+
+// Rabby Wallet SVG
+export function RabbyIcon({ className }) {
+  return (
+    <svg viewBox="0 0 120 120" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="120" rx="28" fill="#8697FF"/>
+      <path d="M90 53H30C28.3 53 27 54.3 27 56V71C27 78.2 32.8 84 40 84H80C87.2 84 93 78.2 93 71V56C93 54.3 91.7 53 90 53Z" fill="white"/>
+      <circle cx="48" cy="68" r="6" fill="#8697FF"/>
+      <circle cx="72" cy="68" r="6" fill="#8697FF"/>
+      <path d="M40 36H80C82.2 36 84 37.8 84 40V49H36V40C36 37.8 37.8 36 40 36Z" fill="#5F75FF"/>
+    </svg>
+  );
+}
+
+// Coinbase Wallet SVG
+export function CoinbaseIcon({ className }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="24" fill="#0052FF"/>
+      <rect x="25" y="25" width="50" height="50" rx="12" fill="white"/>
+    </svg>
+  );
+}
+
+// Phantom Wallet SVG
+export function PhantomIcon({ className }) {
+  return (
+    <svg viewBox="0 0 120 120" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="120" rx="28" fill="#4B40DF"/>
+      <path d="M78.8 45.2C75.2 41.5 69.8 39.5 60 39.5C50.2 39.5 44.8 41.5 41.2 45.2C37.6 48.8 36.2 54.5 36.2 62C36.2 69.5 37.6 75.2 41.2 78.8C44.8 82.5 50.2 84.5 60 84.5C69.8 84.5 75.2 82.5 78.8 78.8C82.4 75.2 83.8 69.5 83.8 62C83.8 54.5 82.4 48.8 78.8 45.2ZM52.5 59.5C50.6 59.5 49 57.9 49 56C49 54.1 50.6 52.5 52.5 52.5C54.4 52.5 56 54.1 56 56C56 57.9 54.4 59.5 52.5 59.5ZM67.5 59.5C65.6 59.5 64 57.9 64 56C64 54.1 65.6 52.5 67.5 52.5C69.4 52.5 71 54.1 71 56C71 57.9 69.4 59.5 67.5 59.5Z" fill="white"/>
+      <path d="M52.5 65.5C55 65.5 57 67.5 57 70H48C48 67.5 50 65.5 52.5 65.5Z" fill="white"/>
+    </svg>
+  );
+}
+
+// Rainbow Wallet SVG
+export function RainbowIcon({ className }) {
+  return (
+    <svg viewBox="0 0 120 120" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="120" rx="28" fill="#1A1B1F"/>
+      <path d="M85 75C85 55.67 69.33 40 50 40C30.67 40 15 55.67 15 75" stroke="#FF007A" strokeWidth="10" strokeLinecap="round"/>
+      <path d="M85 75C85 60.91 73.53 49.44 59.44 49.44C45.36 49.44 33.89 60.91 33.89 75" stroke="#FFCD00" strokeWidth="10" strokeLinecap="round"/>
+      <path d="M85 75C85 66.72 78.28 60 70 60C61.72 60 55 66.72 55 75" stroke="#00E0FF" strokeWidth="10" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+// Generic Wallet Premium SVG (Globe with lines representing Injected/Browser wallet)
+export function GenericWalletIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="#836ef9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+      <path d="M2 12h20" />
     </svg>
   );
 }
@@ -72,6 +124,34 @@ export default function WalletModal({ isOpen, onClose }) {
         desc: "Conéctate usando tu extensión de MetaMask",
       };
     }
+    if (id.includes("rabby") || name.toLowerCase().includes("rabby")) {
+      return {
+        name: "Rabby Wallet",
+        icon: <RabbyIcon className="h-9 w-9" />,
+        desc: "Conéctate usando la extensión de Rabby",
+      };
+    }
+    if (id.includes("coinbase") || name.toLowerCase().includes("coinbase")) {
+      return {
+        name: "Coinbase Wallet",
+        icon: <CoinbaseIcon className="h-9 w-9" />,
+        desc: "Conéctate usando Coinbase Wallet",
+      };
+    }
+    if (id.includes("phantom") || name.toLowerCase().includes("phantom")) {
+      return {
+        name: "Phantom",
+        icon: <PhantomIcon className="h-9 w-9" />,
+        desc: "Conéctate usando tu billetera Phantom",
+      };
+    }
+    if (id.includes("rainbow") || name.toLowerCase().includes("rainbow")) {
+      return {
+        name: "Rainbow",
+        icon: <RainbowIcon className="h-9 w-9" />,
+        desc: "Conéctate usando Rainbow Wallet",
+      };
+    }
     if (id.includes("walletconnect")) {
       return {
         name: "WalletConnect",
@@ -82,7 +162,7 @@ export default function WalletModal({ isOpen, onClose }) {
     // Fallback for injected or generic browser wallets
     return {
       name: name,
-      icon: <span className="text-2xl">💎</span>,
+      icon: <GenericWalletIcon className="h-9 w-9" />,
       desc: "Conéctate con tu billetera de navegador",
     };
   };

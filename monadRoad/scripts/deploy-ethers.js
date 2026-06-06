@@ -11,7 +11,9 @@ if (!privateKey) {
   process.exit(1);
 }
 
-const RPC_URL = "https://testnet-rpc.monad.xyz";
+const RPC_URL = process.env.VITE_ALCHEMY_API_KEY
+  ? `https://monad-testnet.g.alchemy.com/v2/${process.env.VITE_ALCHEMY_API_KEY}`
+  : "https://testnet-rpc.monad.xyz";
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(privateKey, provider);
 

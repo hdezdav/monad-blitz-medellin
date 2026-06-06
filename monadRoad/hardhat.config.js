@@ -15,7 +15,9 @@ export default {
   networks: {
     monadTestnet: {
       type: "http",
-      url: "https://testnet-rpc.monad.xyz",
+      url: process.env.VITE_ALCHEMY_API_KEY 
+        ? `https://monad-testnet.g.alchemy.com/v2/${process.env.VITE_ALCHEMY_API_KEY}`
+        : "https://testnet-rpc.monad.xyz",
       chainId: 10143,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     }

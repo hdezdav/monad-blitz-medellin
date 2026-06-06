@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { GameCard } from "@/components/game-card";
+import { Button } from "@/components/ui/button";
 import { heroCards } from "@/data/cards";
 import { useInventory } from "@/context/InventoryContext";
 import { ROUTES } from "../routes/paths";
@@ -105,7 +106,6 @@ export default function BattlePage() {
   const [shakeEnemy, setShakeEnemy] = useState(false);
 
   // Recording victory on-chain
-  const [recordingVictory, setRecordingVictory] = useState(false);
   const [victoryError, setVictoryError] = useState("");
 
   // Post-battle
@@ -187,8 +187,7 @@ export default function BattlePage() {
   };
 
   /* ── Record Victory on GameState ── */
-  const recordOnChainVictory = async () => {
-    setRecordingVictory(true);
+  const recordOnChainVictory = useCallback(async () => {
     setVictoryError("");
     try {
       const tx = await writeContractAsync({
@@ -204,10 +203,8 @@ export default function BattlePage() {
     } catch (err) {
       console.error(err);
       setVictoryError(err.message || "Error al emitir transacción.");
-    } finally {
-      setRecordingVictory(false);
     }
-  };
+  }, [currentPhase, writeContractAsync, publicClient, refetch]);
 
   /* ── Play a card ── */
   const playCard = useCallback(
@@ -285,7 +282,7 @@ export default function BattlePage() {
     if (phase === PHASE.RECORDING_VICTORY) {
       recordOnChainVictory();
     }
-  }, [phase]);
+  }, [phase, recordOnChainVictory]);
 
   /* ── Retry ── */
   const retry = useCallback(() => {
@@ -654,7 +651,7 @@ export default function BattlePage() {
                   {/* Round indicator */}
                   <div className="round-indicator">
                     <span className="round-indicator__text">
-                      Ronda <span>{roundRef.current + 1}</span> de{" "}
+                      Ronda <span>{Math.min(playedIndices.length + 1, MAX_HAND_SIZE)}</span> de{" "}
                       {MAX_HAND_SIZE}
                       {!isPlaying &&
                         playedIndices.length < MAX_HAND_SIZE &&
@@ -819,8 +816,8 @@ export default function BattlePage() {
                       {/* Battle summary */}
                       <div
                         style={{
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.08)",
+                          background: "rgba(0,0,0,0.03)",
+                          border: "1px solid rgba(0,0,0,0.08)",
                           borderRadius: 16,
                           padding: 20,
                           maxWidth: 340,
@@ -833,7 +830,7 @@ export default function BattlePage() {
                             fontWeight: 700,
                             textTransform: "uppercase",
                             letterSpacing: "0.1em",
-                            color: "rgba(255,255,255,0.3)",
+                            color: "rgba(0,0,0,0.4)",
                           }}
                         >
                           Resumen
@@ -843,24 +840,24 @@ export default function BattlePage() {
                             key={i}
                             style={{
                               fontSize: 13,
-                              color: "rgba(255,255,255,0.55)",
+                              color: "rgba(0,0,0,0.7)",
                               padding: "8px 0",
                               borderBottom:
                                 i < combatLog.length - 1
-                                  ? "1px solid rgba(255,255,255,0.04)"
+                                  ? "1px solid rgba(0,0,0,0.05)"
                                   : "none",
                             }}
                           >
-                            <strong style={{ color: "rgba(255,255,255,0.8)" }}>
+                            <strong style={{ color: "rgba(0,0,0,0.9)" }}>
                               R{entry.round}:
                             </strong>{" "}
                             {entry.card} →{" "}
-                            <span style={{ color: "#f87171", fontWeight: 700 }}>
+                            <span style={{ color: "#ef4444", fontWeight: 700 }}>
                               -{entry.damage}
                             </span>
                             {entry.isCounter && (
                               <span
-                                style={{ color: "#fbbf24", fontWeight: 700 }}
+                                style={{ color: "#d97706", fontWeight: 700 }}
                               >
                                 {" "}
                                 ★ Counter

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react'
+import { createContext, useContext, useCallback, useMemo, useEffect } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { heroCards } from '@/data/cards'
 import { CONTRACT_ADDRESSES, NFT_CARDS_ABI, GAME_STATE_ABI } from '@/lib/contracts'
