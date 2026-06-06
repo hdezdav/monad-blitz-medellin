@@ -1,0 +1,279 @@
+/* ── Modal Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: overlayIn 0.25s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Modal Container ── */
+.modal-container {
+  position: relative;
+  width: 420px;
+  max-width: 92vw;
+  background: rgba(22, 18, 36, 0.92);
+  border: 1px solid rgba(131, 110, 249, 0.2);
+  border-radius: 24px;
+  padding: 32px;
+  overflow: hidden;
+  animation: modalSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Glow Decorations ── */
+.modal-glow {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.modal-glow--top {
+  top: -80px;
+  right: -40px;
+  background: #836EF9;
+}
+
+.modal-glow--bottom {
+  bottom: -80px;
+  left: -40px;
+  background: #c084fc;
+}
+
+/* ── Close Button ── */
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ── Header ── */
+.modal-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.modal-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  background: rgba(131, 110, 249, 0.12);
+  border: 1px solid rgba(131, 110, 249, 0.25);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(131, 110, 249, 0.2); }
+  50% { box-shadow: 0 0 20px 4px rgba(131, 110, 249, 0.15); }
+}
+
+.modal-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 6px;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Wallet Options ── */
+.modal-wallets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wallet-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  color: #fff;
+  text-align: left;
+}
+
+.wallet-option:hover {
+  background: rgba(131, 110, 249, 0.1);
+  border-color: rgba(131, 110, 249, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(131, 110, 249, 0.12);
+}
+
+.wallet-option--loading {
+  border-color: rgba(131, 110, 249, 0.4);
+  background: rgba(131, 110, 249, 0.08);
+}
+
+.wallet-icon {
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.wallet-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wallet-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+}
+
+.wallet-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.wallet-arrow {
+  color: rgba(255, 255, 255, 0.25);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.wallet-option:hover .wallet-arrow {
+  color: #836EF9;
+  transform: translateX(2px);
+}
+
+/* ── Spinner ── */
+.wallet-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(131, 110, 249, 0.2);
+  border-top-color: #836EF9;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Error ── */
+.modal-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+}
+
+.modal-error p {
+  font-size: 13px;
+  color: #fca5a5;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Footer ── */
+.modal-footer {
+  margin-top: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-chain-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(131, 110, 249, 0.08);
+  border: 1px solid rgba(131, 110, 249, 0.15);
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #c084fc;
+  letter-spacing: 0.3px;
+}
+
+.chain-dot {
+  width: 6px;
+  height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: chainPulse 2s ease-in-out infinite;
+}
+
+@keyframes chainPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.modal-legal {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0;
+}
