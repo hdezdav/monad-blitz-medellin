@@ -1,0 +1,12 @@
+# Agents
+.agents/
+.agetns/
+.claude/
+
+# Skills Lock
+skills-lock.json
+skills/lock
+
+# Logs & wrangler files
+*.log
+.wrangler/
