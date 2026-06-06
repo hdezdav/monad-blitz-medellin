@@ -2,6 +2,12 @@ import { createConfig, http } from 'wagmi'
 import { monadTestnet } from 'wagmi/chains'
 import { injected, walletConnect } from 'wagmi/connectors'
 
+const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY
+
+const monadTestnetRpc = alchemyApiKey
+  ? `https://monad-testnet.g.alchemy.com/v2/${alchemyApiKey}`
+  : 'https://testnet-rpc.monad.xyz'
+
 // Monad Testnet config (switch to mainnet for production)
 export const config = createConfig({
   chains: [monadTestnet],
@@ -12,6 +18,6 @@ export const config = createConfig({
     }),
   ],
   transports: {
-    [monadTestnet.id]: http('https://testnet-rpc.monad.xyz'),
+    [monadTestnet.id]: http(monadTestnetRpc),
   },
 })

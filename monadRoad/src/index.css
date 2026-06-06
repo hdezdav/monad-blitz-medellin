@@ -1,24 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-
-/* ═══════════════════════════════════════
-   MONAD ROAD — Global Design System
-   ═══════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary: #836EF9;
-  --primary-light: #c084fc;
-  --primary-dark: #6d28d9;
-  --bg: #0a0a12;
-  --surface: rgba(255, 255, 255, 0.04);
-  --border: rgba(255, 255, 255, 0.06);
-  --text: rgba(255, 255, 255, 0.7);
-  --text-muted: rgba(255, 255, 255, 0.4);
-  --text-heading: #ffffff;
-  --danger: #ef4444;
-  --success: #22c55e;
+  --bg: #f0f0f2;
+  --surface: #ffffff;
+  --border: #e8e8ec;
 
-  --font: 'Outfit', system-ui, -apple-system, sans-serif;
-  --radius: 16px;
+  --text: #2d2d35;
+  --text-muted: #7a7a88;
+  --text-heading: #1a1a22;
+
+  --pastel-lavender: #e8e0ff;
+  --pastel-mint: #d8f5e8;
+  --pastel-peach: #ffe8dc;
+  --pastel-sky: #dceeff;
+  --pastel-yellow: #fff4d6;
+
+  --accent: #7c6cf0;
+  --accent-hover: #6b5ce0;
+  --success: #34c759;
+  --danger: #ff6b6b;
+
+  --font: 'Poppins', system-ui, -apple-system, sans-serif;
+  --radius: 20px;
+  --radius-sm: 14px;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 *, *::before, *::after {
@@ -36,7 +42,6 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -52,4 +57,6 @@ a {
 
 button {
   font-family: inherit;
+  border: none;
+  cursor: pointer;
 }

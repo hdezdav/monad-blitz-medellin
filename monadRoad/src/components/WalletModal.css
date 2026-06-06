@@ -1,14 +1,13 @@
-/* ── Modal Overlay ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
+  background: rgba(240, 240, 242, 0.75);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: overlayIn 0.25s ease;
+  animation: overlayIn 0.2s ease;
 }
 
 @keyframes overlayIn {
@@ -16,23 +15,22 @@
   to { opacity: 1; }
 }
 
-/* ── Modal Container ── */
 .modal-container {
   position: relative;
   width: 420px;
   max-width: 92vw;
-  background: rgba(22, 18, 36, 0.92);
-  border: 1px solid rgba(131, 110, 249, 0.2);
-  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 32px;
-  overflow: hidden;
-  animation: modalSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: var(--shadow-hover);
+  animation: modalSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes modalSlideUp {
   from {
     opacity: 0;
-    transform: translateY(24px) scale(0.96);
+    transform: translateY(16px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -40,92 +38,61 @@
   }
 }
 
-/* ── Glow Decorations ── */
 .modal-glow {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-  opacity: 0.4;
+  display: none;
 }
 
-.modal-glow--top {
-  top: -80px;
-  right: -40px;
-  background: #836EF9;
-}
-
-.modal-glow--bottom {
-  bottom: -80px;
-  left: -40px;
-  background: #c084fc;
-}
-
-/* ── Close Button ── */
 .modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
 .modal-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: #e8e8ec;
+  color: var(--text-heading);
 }
 
-/* ── Header ── */
 .modal-header {
   text-align: center;
   margin-bottom: 28px;
 }
 
 .modal-icon {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   margin: 0 auto 16px;
-  background: rgba(131, 110, 249, 0.12);
-  border: 1px solid rgba(131, 110, 249, 0.25);
-  border-radius: 16px;
+  background: var(--pastel-lavender);
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: iconPulse 3s ease-in-out infinite;
-}
-
-@keyframes iconPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(131, 110, 249, 0.2); }
-  50% { box-shadow: 0 0 20px 4px rgba(131, 110, 249, 0.15); }
 }
 
 .modal-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-heading);
   margin: 0 0 6px;
 }
 
 .modal-subtitle {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-muted);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
-/* ── Wallet Options ── */
 .modal-wallets {
   display: flex;
   flex-direction: column;
@@ -138,35 +105,35 @@
   gap: 14px;
   width: 100%;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.25s ease;
-  color: #fff;
+  transition: all 0.2s ease;
+  color: var(--text-heading);
   text-align: left;
 }
 
 .wallet-option:hover {
-  background: rgba(131, 110, 249, 0.1);
-  border-color: rgba(131, 110, 249, 0.3);
+  background: var(--pastel-lavender);
+  border-color: transparent;
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(131, 110, 249, 0.12);
+  box-shadow: var(--shadow);
 }
 
 .wallet-option--loading {
-  border-color: rgba(131, 110, 249, 0.4);
-  background: rgba(131, 110, 249, 0.08);
+  border-color: var(--accent);
+  background: var(--pastel-lavender);
 }
 
 .wallet-icon {
-  font-size: 28px;
+  font-size: 26px;
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface);
   border-radius: 12px;
   flex-shrink: 0;
 }
@@ -179,34 +146,32 @@
 }
 
 .wallet-name {
-  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 15px;
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .wallet-desc {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 .wallet-arrow {
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .wallet-option:hover .wallet-arrow {
-  color: #836EF9;
+  color: var(--accent);
   transform: translateX(2px);
 }
 
-/* ── Spinner ── */
 .wallet-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(131, 110, 249, 0.2);
-  border-top-color: #836EF9;
+  border: 2px solid rgba(124, 108, 240, 0.2);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   flex-shrink: 0;
@@ -216,26 +181,24 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Error ── */
 .modal-error {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   padding: 12px 14px;
   margin-top: 12px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 12px;
+  background: #fff0f0;
+  border: 1px solid #ffd6d6;
+  border-radius: var(--radius-sm);
 }
 
 .modal-error p {
   font-size: 13px;
-  color: #fca5a5;
+  color: #c0392b;
   margin: 0;
   line-height: 1.4;
 }
 
-/* ── Footer ── */
 .modal-footer {
   margin-top: 24px;
   text-align: center;
@@ -250,30 +213,22 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: rgba(131, 110, 249, 0.08);
-  border: 1px solid rgba(131, 110, 249, 0.15);
+  background: var(--pastel-mint);
   border-radius: 100px;
   font-size: 12px;
   font-weight: 500;
-  color: #c084fc;
-  letter-spacing: 0.3px;
+  color: #2d6a4f;
 }
 
 .chain-dot {
   width: 6px;
   height: 6px;
-  background: #22c55e;
+  background: var(--success);
   border-radius: 50%;
-  animation: chainPulse 2s ease-in-out infinite;
-}
-
-@keyframes chainPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
 }
 
 .modal-legal {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   margin: 0;
 }
