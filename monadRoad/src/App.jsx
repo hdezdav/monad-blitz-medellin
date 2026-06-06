@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useState } from 'react'
 import { useAccount, useDisconnect } from 'wagmi'
 import WalletModal from './components/WalletModal'
@@ -11,8 +12,19 @@ function App() {
   const [showModal, setShowModal] = useState(false)
 
   const truncate = (addr) => (addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '')
+=======
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import AppLayout from './layouts/AppLayout'
+import LandingPage from './pages/LandingPage'
+import OpenPackPage from './pages/OpenPackPage'
+import CardsPage from './pages/CardsPage'
+import BattlePage from './pages/BattlePage'
+import { ROUTES } from './routes/paths'
+>>>>>>> 3507fb2bc33e778f37626fa4916bab6018b59095
 
+export default function App() {
   return (
+<<<<<<< HEAD
     <div className="app">
       {/* ── Global dots background ── */}
       <BGPattern
@@ -105,7 +117,17 @@ function App() {
       {/* Wallet connect modal (triggered from top bar + story CTA) */}
       <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} />
     </div>
+=======
+    <BrowserRouter>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path={ROUTES.home} element={<LandingPage />} />
+          <Route path={ROUTES.pack} element={<OpenPackPage />} />
+          <Route path={ROUTES.cards} element={<CardsPage />} />
+          <Route path={ROUTES.battle} element={<BattlePage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+>>>>>>> 3507fb2bc33e778f37626fa4916bab6018b59095
   )
 }
-
-export default App
