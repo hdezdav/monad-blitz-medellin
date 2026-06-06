@@ -1,153 +1,665 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { Swords, Shield, Zap, Search } from "lucide-react";
+import {
+  Swords,
+  Shield,
+  Zap,
+  Trophy,
+  Skull,
+  RotateCcw,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
 
-import { BgGradient } from "@/components/ui/bg-gradient";
-import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/game-card";
 import { heroCards } from "@/data/cards";
 import { ROUTES } from "../routes/paths";
+import "./BattlePage.css";
 
+/* ─── Constants ─── */
+const MAX_HAND_SIZE = 3;
+const HP_MULTIPLIER = 10;
+const PLAY_DELAY_MS = 1200;
+const DAMAGE_DISPLAY_MS = 1400;
+
+/* ─── Helpers ─── */
+function computeDamage(card, enemy) {
+  const counter = card.counters?.find((c) => c.target === enemy.id);
+  const baseDmg = card.attack;
+  if (counter) {
+    return {
+      damage: Math.round(baseDmg * counter.multiplier),
+      isCounter: true,
+      multiplier: counter.multiplier,
+    };
+  }
+  return { damage: baseDmg, isCounter: false, multiplier: 1 };
+}
+
+function hpBarClass(pct) {
+  if (pct > 55) return "health-bar__fill--healthy";
+  if (pct > 25) return "health-bar__fill--warning";
+  return "health-bar__fill--critical";
+}
+
+/* ─── Phases ─── */
+const PHASE = { PRE: "pre", BATTLE: "battle", POST: "post" };
+
+/* ─── Pick a random enemy (always the "threat" cards) ─── */
+function pickEnemy() {
+  // For now use the last card "Enlace Malicioso"
+  return heroCards[heroCards.length - 1];
+}
+
+/* ════════════════════════════════════════════════════════════
+   BattlePage
+   ════════════════════════════════════════════════════════════ */
 export default function BattlePage() {
   const { isConnected } = useAccount();
-  const [searching, setSearching] = useState(false);
-  const [battleStarted, setBattleStarted] = useState(false);
 
-  // Player and opponent cards
-  const playerCard = heroCards[0]; // Bloque Génesis
-  const opponentCard = heroCards[5]; // Enlace Malicioso
+  /* ── Game state ── */
+  const [phase, setPhase] = useState(PHASE.PRE);
+  const [enemy] = useState(pickEnemy);
 
-  const startSearch = () => {
-    setSearching(true);
-    setTimeout(() => {
-      setSearching(false);
-      setBattleStarted(true);
-    }, 2500);
-  };
+  // Pre-battle: card selection
+  const [selectedIds, setSelectedIds] = useState([]);
 
+  // Battle state
+  const [hand, setHand] = useState([]);
+  const [playedIndices, setPlayedIndices] = useState([]);
+  const [enemyHp, setEnemyHp] = useState(0);
+  const [maxHp, setMaxHp] = useState(0);
+  const [currentPlay, setCurrentPlay] = useState(null); // card being played
+  const [damagePopup, setDamagePopup] = useState(null);
+  const [counterText, setCounterText] = useState(null);
+  const [combatLog, setCombatLog] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [shakeEnemy, setShakeEnemy] = useState(false);
+
+  // Post-battle
+  const [didWin, setDidWin] = useState(false);
+
+  const roundRef = useRef(0);
+
+  /* ── Card selection toggle ── */
+  const toggleCard = useCallback(
+    (cardId) => {
+      setSelectedIds((prev) => {
+        if (prev.includes(cardId)) return prev.filter((id) => id !== cardId);
+        if (prev.length >= MAX_HAND_SIZE) return prev;
+        return [...prev, cardId];
+      });
+    },
+    []
+  );
+
+  /* ── Start battle ── */
+  const startBattle = useCallback(() => {
+    const selectedCards = selectedIds.map((id) =>
+      heroCards.find((c) => c.id === id)
+    );
+    const hp = enemy.defense * HP_MULTIPLIER;
+    setHand(selectedCards);
+    setPlayedIndices([]);
+    setEnemyHp(hp);
+    setMaxHp(hp);
+    setCurrentPlay(null);
+    setDamagePopup(null);
+    setCounterText(null);
+    setCombatLog([]);
+    roundRef.current = 0;
+    setPhase(PHASE.BATTLE);
+  }, [selectedIds, enemy]);
+
+  /* ── Play a card ── */
+  const playCard = useCallback(
+    (index) => {
+      if (isPlaying || playedIndices.includes(index)) return;
+      setIsPlaying(true);
+
+      const card = hand[index];
+      const { damage, isCounter, multiplier } = computeDamage(card, enemy);
+      roundRef.current += 1;
+      const round = roundRef.current;
+
+      // Show card moving to center
+      setCurrentPlay(card);
+      setPlayedIndices((prev) => [...prev, index]);
+
+      // After a brief delay, show damage
+      setTimeout(() => {
+        setDamagePopup({ damage, isCounter });
+        if (isCounter) {
+          setCounterText(`¡COUNTER! ×${multiplier}`);
+        }
+        setShakeEnemy(true);
+
+        // Update HP
+        setEnemyHp((prev) => {
+          const newHp = Math.max(0, prev - damage);
+
+          // Add to combat log
+          setCombatLog((log) => [
+            ...log,
+            {
+              round,
+              card: card.name,
+              damage,
+              isCounter,
+              remainingHp: newHp,
+            },
+          ]);
+
+          // Check if battle is over (after all 3 cards or enemy dead)
+          const allPlayed = round >= MAX_HAND_SIZE;
+          if (newHp <= 0 || allPlayed) {
+            setTimeout(() => {
+              setDidWin(newHp <= 0);
+              setPhase(PHASE.POST);
+            }, DAMAGE_DISPLAY_MS + 400);
+          }
+
+          return newHp;
+        });
+      }, PLAY_DELAY_MS / 2);
+
+      // Cleanup damage popup
+      setTimeout(() => {
+        setDamagePopup(null);
+        setCounterText(null);
+        setShakeEnemy(false);
+        setCurrentPlay(null);
+        setIsPlaying(false);
+      }, PLAY_DELAY_MS + DAMAGE_DISPLAY_MS);
+    },
+    [hand, enemy, isPlaying, playedIndices]
+  );
+
+  /* ── Retry ── */
+  const retry = useCallback(() => {
+    setSelectedIds([]);
+    setPhase(PHASE.PRE);
+  }, []);
+
+  /* ── Render helpers ── */
+  const hpPct = maxHp > 0 ? (enemyHp / maxHp) * 100 : 100;
+
+  /* ════════════════════════════════════════════════════════ */
   return (
-    <div className="relative min-h-screen px-6 py-16">
-      <BgGradient
-        gradientFrom="#ffffff"
-        gradientTo="#ffd2bb"
-        gradientStop="40%"
-        gradientPosition="50% 5%"
-      />
-
-      <div className="mx-auto max-w-6xl text-center">
-        <motion.span
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-white/70 px-4 py-1.5 text-sm font-medium text-monad-ink shadow-sm backdrop-blur"
-        >
-          <Swords className="h-4 w-4 text-rose-500 animate-pulse" /> Arena de Combate
-        </motion.span>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 text-4xl font-extrabold tracking-tight text-monad-ink md:text-5xl"
-        >
-          Demuestra tu <span className="text-gradient">Poder Web3</span>
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mx-auto mt-4 max-w-xl text-muted-foreground"
-        >
-          Reta a contratos inteligentes u otros jugadores en combates de estrategia basados en tus conocimientos blockchain.
-        </motion.p>
-      </div>
-
-      <div className="mx-auto mt-12 max-w-4xl">
+    <div className="battle-arena">
+      <div className="battle-content">
         {!isConnected ? (
-          <div className="flex flex-col items-center justify-center p-12 rounded-2xl border border-dashed border-border bg-white/50 backdrop-blur">
-            <span className="text-4xl mb-4">🔒</span>
-            <h3 className="text-lg font-bold text-monad-ink">Wallet no conectada</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xs text-center">
-              Conecta tu wallet para acceder a la arena y luchar contra oponentes on-chain.
+          /* ── Wallet locked ── */
+          <div className="battle-locked">
+            <span className="battle-locked__icon">🔒</span>
+            <h3 className="battle-locked__title">Wallet no conectada</h3>
+            <p className="battle-locked__desc">
+              Conecta tu wallet para acceder a la arena y luchar contra
+              oponentes on-chain.
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-8">
-            {/* Tablero de Batalla */}
-            <div className="w-full grid md:grid-cols-3 items-center justify-items-center gap-6 rounded-3xl border border-border bg-white/40 p-8 shadow-xl backdrop-blur">
-              {/* Lado Jugador */}
-              <div className="flex flex-col items-center gap-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">Tú (Jugador)</span>
-                {battleStarted ? (
-                  <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                    <GameCard card={playerCard} />
+          <>
+            {/* ═══════ PHASE: PRE-BATTLE ═══════ */}
+            <AnimatePresence mode="wait">
+              {phase === PHASE.PRE && (
+                <motion.div
+                  key="pre"
+                  className="pre-battle"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, y: -30 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  {/* Header */}
+                  <div className="pre-battle__header">
+                    <span className="pre-battle__badge">
+                      <Swords size={14} /> Arena de Combate
+                    </span>
+                    <h1 className="pre-battle__title">
+                      Elige tu <span>Estrategia</span>
+                    </h1>
+                    <p className="pre-battle__subtitle">
+                      Analiza al enemigo, elige sabiamente tus 3 cartas y
+                      entra en batalla.
+                    </p>
+                  </div>
+
+                  {/* Enemy preview */}
+                  <motion.div
+                    className="enemy-preview"
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                  >
+                    <span className="enemy-preview__label">
+                      Próximo Enemigo
+                    </span>
+                    <h2 className="enemy-preview__name">{enemy.name}</h2>
+                    <span className="enemy-preview__type">{enemy.type}</span>
+                    <p className="enemy-preview__desc">{enemy.description}</p>
+
+                    <div className="enemy-stats">
+                      <div className="enemy-stat">
+                        <Swords
+                          size={16}
+                          className="enemy-stat__value--atk"
+                        />
+                        <span className="enemy-stat__value enemy-stat__value--atk">
+                          {enemy.attack}
+                        </span>
+                        <span className="enemy-stat__label">Ataque</span>
+                      </div>
+                      <div className="enemy-stat">
+                        <Shield
+                          size={16}
+                          className="enemy-stat__value--def"
+                        />
+                        <span className="enemy-stat__value enemy-stat__value--def">
+                          {enemy.defense}
+                        </span>
+                        <span className="enemy-stat__label">Defensa</span>
+                      </div>
+                      <div className="enemy-stat">
+                        <Zap size={16} className="enemy-stat__value--nrg" />
+                        <span className="enemy-stat__value enemy-stat__value--nrg">
+                          {enemy.energy}
+                        </span>
+                        <span className="enemy-stat__label">Energía</span>
+                      </div>
+                    </div>
                   </motion.div>
-                ) : (
-                  <div className="flex h-72 w-56 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-white/60 text-muted-foreground">
-                    <Zap className="h-10 w-10 text-muted-foreground/40 mb-2 animate-bounce" />
-                    <p className="text-xs font-semibold">Listo para combatir</p>
-                    <p className="text-[10px] text-muted-foreground/60">{playerCard.name} seleccionado</p>
-                  </div>
-                )}
-              </div>
 
-              {/* Centro: VS / Estado */}
-              <div className="flex flex-col items-center gap-4">
-                {searching ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Search className="h-8 w-8 text-primary animate-spin" />
-                    <span className="text-sm font-bold text-monad-ink animate-pulse">Buscando rival...</span>
-                  </div>
-                ) : battleStarted ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="rounded-full bg-rose-100 px-4 py-1 text-xs font-extrabold text-rose-700 uppercase tracking-widest animate-pulse">¡En Combate!</span>
-                    <span className="text-2xl font-black text-monad-ink">VS</span>
-                    <Button variant="destructive" size="sm" onClick={() => setBattleStarted(false)}>
-                      Retirarse
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-3xl font-black text-monad-ink/20">VS</span>
-                    <Button onClick={startSearch} className="shadow-lg shadow-primary/30 h-11 px-6 font-bold">
-                      Buscar Oponente
-                    </Button>
-                  </div>
-                )}
-              </div>
+                  {/* Card selection */}
+                  <div className="card-selection">
+                    <p className="card-selection__label">
+                      Selecciona <strong>{MAX_HAND_SIZE} cartas</strong> de tu
+                      wallet ({selectedIds.length}/{MAX_HAND_SIZE})
+                    </p>
+                    <div className="card-selection__grid">
+                      {heroCards
+                        .filter((c) => c.id !== enemy.id)
+                        .map((card, i) => {
+                          const isSelected = selectedIds.includes(card.id);
+                          const isFull =
+                            selectedIds.length >= MAX_HAND_SIZE &&
+                            !isSelected;
 
-              {/* Lado Oponente */}
-              <div className="flex flex-col items-center gap-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Oponente</span>
-                {battleStarted ? (
-                  <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                    <GameCard card={opponentCard} />
-                  </motion.div>
-                ) : (
-                  <div className="flex h-72 w-56 flex-col items-center justify-center rounded-2xl border bg-slate-50/50 text-muted-foreground/40">
-                    <Shield className="h-10 w-10 mb-2" />
-                    <p className="text-xs font-semibold">Esperando rival...</p>
+                          return (
+                            <motion.div
+                              key={card.id}
+                              initial={{ opacity: 0, y: 30 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.2 + i * 0.06 }}
+                              className={[
+                                "card-select-wrapper",
+                                isSelected && "card-select-wrapper--selected",
+                                isFull && "card-select-wrapper--disabled",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                              onClick={() => toggleCard(card.id)}
+                            >
+                              <GameCard card={card} />
+                            </motion.div>
+                          );
+                        })}
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Acciones extra */}
-            {!battleStarted && (
-              <div className="flex gap-4">
-                <Button asChild variant="outline" className="bg-white/60 backdrop-blur">
-                  <Link to={ROUTES.cards}>Editar mi Mazo</Link>
-                </Button>
-              </div>
-            )}
-          </div>
+                  {/* Actions */}
+                  <div className="pre-battle__actions">
+                    <button
+                      className="btn-start-battle"
+                      disabled={selectedIds.length < MAX_HAND_SIZE}
+                      onClick={startBattle}
+                    >
+                      <Swords size={18} />
+                      Iniciar Combate
+                    </button>
+                    {selectedIds.length < MAX_HAND_SIZE && (
+                      <span className="pre-battle__hint">
+                        Selecciona {MAX_HAND_SIZE - selectedIds.length} carta
+                        {MAX_HAND_SIZE - selectedIds.length !== 1 && "s"} más
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ═══════ PHASE: BATTLE ═══════ */}
+              {phase === PHASE.BATTLE && (
+                <motion.div
+                  key="battle"
+                  className="battle-table"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  {/* Enemy zone */}
+                  <div className="enemy-zone">
+                    <span className="enemy-zone__name">
+                      <Skull size={14} />
+                      {enemy.name}
+                    </span>
+
+                    <motion.div
+                      className={`enemy-card-container ${
+                        shakeEnemy ? "enemy-card-container--hit" : ""
+                      }`}
+                      initial={{ opacity: 0, y: -40 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <GameCard card={enemy} />
+                    </motion.div>
+
+                    {/* Health bar */}
+                    <div className="health-bar-wrap">
+                      <div className="health-bar">
+                        <div
+                          className={`health-bar__fill ${hpBarClass(hpPct)}`}
+                          style={{ width: `${hpPct}%` }}
+                        />
+                      </div>
+                      <span className="health-bar__text">
+                        HP {enemyHp} / {maxHp}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Play zone */}
+                  <div className="play-zone">
+                    {/* Card being played */}
+                    <AnimatePresence>
+                      {currentPlay && (
+                        <motion.div
+                          className="play-zone__card"
+                          initial={{ y: 200, opacity: 0, scale: 0.7 }}
+                          animate={{ y: 0, opacity: 1, scale: 1 }}
+                          exit={{ y: -60, opacity: 0, scale: 0.8 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 200,
+                            damping: 18,
+                          }}
+                        >
+                          <GameCard card={currentPlay} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Damage popup */}
+                    <AnimatePresence>
+                      {damagePopup && (
+                        <motion.span
+                          key="dmg"
+                          className={`damage-popup ${
+                            damagePopup.isCounter ? "damage-popup--bonus" : ""
+                          }`}
+                          initial={{ opacity: 0, scale: 0.4 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          -{damagePopup.damage}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Counter bonus text */}
+                    <AnimatePresence>
+                      {counterText && (
+                        <motion.span
+                          key="counter"
+                          className="counter-text"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          {counterText}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Combat log */}
+                    {combatLog.length > 0 && (
+                      <div className="combat-log">
+                        <span className="combat-log__title">
+                          Registro de Transacciones
+                        </span>
+                        {combatLog.map((entry, i) => (
+                          <div key={i} className="combat-log__entry">
+                            <strong>R{entry.round}:</strong> {entry.card} →{" "}
+                            <span className="dmg">-{entry.damage}</span>
+                            {entry.isCounter && (
+                              <span className="bonus"> ★ Counter</span>
+                            )}
+                            <br />
+                            HP restante: {entry.remainingHp}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Round indicator */}
+                  <div className="round-indicator">
+                    <span className="round-indicator__text">
+                      Ronda <span>{roundRef.current + 1}</span> de{" "}
+                      {MAX_HAND_SIZE}
+                      {!isPlaying &&
+                        playedIndices.length < MAX_HAND_SIZE &&
+                        " — Elige una carta para jugar"}
+                    </span>
+                  </div>
+
+                  {/* Player hand */}
+                  <div className="player-hand">
+                    {hand.map((card, i) => {
+                      const wasPlayed = playedIndices.includes(i);
+                      return (
+                        <motion.div
+                          key={card.id}
+                          className={[
+                            "hand-card-slot",
+                            wasPlayed && "hand-card-slot--played",
+                            !wasPlayed &&
+                              !isPlaying &&
+                              "hand-card-slot--active",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          initial={{ opacity: 0, y: 80 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 + i * 0.1 }}
+                          onClick={() => playCard(i)}
+                        >
+                          <GameCard card={card} />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ═══════ PHASE: POST-BATTLE ═══════ */}
+              {phase === PHASE.POST && (
+                <motion.div
+                  key="post"
+                  className="post-battle"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {didWin ? (
+                    <>
+                      {/* Victory confetti */}
+                      {Array.from({ length: 24 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className="victory-particle"
+                          style={{
+                            left: `${(i * 41) % 100}%`,
+                            top: 0,
+                            background: [
+                              "#fbbf24",
+                              "#836ef9",
+                              "#34d399",
+                              "#f472b6",
+                              "#60a5fa",
+                            ][i % 5],
+                            animationDuration: `${3 + (i % 4)}s`,
+                            animationDelay: `${(i % 8) * 0.3}s`,
+                          }}
+                        />
+                      ))}
+
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 180,
+                          damping: 12,
+                        }}
+                      >
+                        <Trophy
+                          size={72}
+                          color="#fbbf24"
+                          strokeWidth={1.5}
+                        />
+                      </motion.div>
+
+                      <h1 className="victory-title">¡Victoria!</h1>
+                      <p className="post-battle__subtitle">
+                        Has derrotado a {enemy.name}. Su NFT ha sido reclamado
+                        y añadido a tu wallet.
+                      </p>
+
+                      {/* NFT claimed */}
+                      <motion.div
+                        className="nft-claimed"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <span className="nft-claimed__label">
+                          <Sparkles size={14} /> NFT Reclamado
+                        </span>
+                        <GameCard card={enemy} />
+                      </motion.div>
+
+                      <div className="post-battle__actions">
+                        <Link to={ROUTES.cards} className="btn-start-battle">
+                          Ver mi Colección <ArrowRight size={16} />
+                        </Link>
+                        <button className="btn-secondary" onClick={retry}>
+                          <RotateCcw size={14} /> Otra Batalla
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 180,
+                          damping: 12,
+                        }}
+                      >
+                        <Skull size={72} color="#ef4444" strokeWidth={1.5} />
+                      </motion.div>
+
+                      <h1 className="defeat-title">Derrota</h1>
+                      <p className="post-battle__subtitle">
+                        {enemy.name} ha resistido tu ataque. Revisa tu
+                        estrategia y vuelve a intentarlo.
+                      </p>
+
+                      {/* Battle summary */}
+                      <div
+                        style={{
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 16,
+                          padding: 20,
+                          maxWidth: 340,
+                          width: "100%",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.1em",
+                            color: "rgba(255,255,255,0.3)",
+                          }}
+                        >
+                          Resumen
+                        </span>
+                        {combatLog.map((entry, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              fontSize: 13,
+                              color: "rgba(255,255,255,0.55)",
+                              padding: "8px 0",
+                              borderBottom:
+                                i < combatLog.length - 1
+                                  ? "1px solid rgba(255,255,255,0.04)"
+                                  : "none",
+                            }}
+                          >
+                            <strong style={{ color: "rgba(255,255,255,0.8)" }}>
+                              R{entry.round}:
+                            </strong>{" "}
+                            {entry.card} →{" "}
+                            <span style={{ color: "#f87171", fontWeight: 700 }}>
+                              -{entry.damage}
+                            </span>
+                            {entry.isCounter && (
+                              <span
+                                style={{ color: "#fbbf24", fontWeight: 700 }}
+                              >
+                                {" "}
+                                ★ Counter
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                        <div
+                          style={{
+                            marginTop: 12,
+                            fontSize: 13,
+                            color: "#ef4444",
+                            fontWeight: 700,
+                          }}
+                        >
+                          HP restante del enemigo: {enemyHp}
+                        </div>
+                      </div>
+
+                      <div className="post-battle__actions">
+                        <button className="btn-start-battle" onClick={retry}>
+                          <RotateCcw size={16} /> Reintentar
+                        </button>
+                        <Link to={ROUTES.home} className="btn-secondary">
+                          Retirarse
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
         )}
-      </div>
-
-      <div className="mt-16 flex justify-center">
-        <Button asChild variant="outline" className="bg-white/60 backdrop-blur">
-          <Link to={ROUTES.home}>Volver al inicio</Link>
-        </Button>
       </div>
     </div>
   );

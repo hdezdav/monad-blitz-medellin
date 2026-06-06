@@ -10,6 +10,7 @@ import {
 /** Hero deck — cartas dummy que representan conceptos blockchain. */
 export const heroCards = [
   {
+    id: "bloque-genesis",
     name: "Bloque Génesis",
     type: "Fundamento",
     rarity: "Legendaria",
@@ -19,8 +20,10 @@ export const heroCards = [
     description: "El primer bloque de la cadena. Inmutable e indestructible.",
     icon: Blocks,
     gradient: "from-violet-500 to-indigo-700",
+    counters: [], // universal — no specific counter but high base stats
   },
   {
+    id: "validacion-contrato",
     name: "Validación de Contrato",
     type: "Defensa · Counter",
     rarity: "Épica",
@@ -30,8 +33,10 @@ export const heroCards = [
     description: "Contrarresta 'Enlace Malicioso' y anula el phishing enemigo.",
     icon: ShieldCheck,
     gradient: "from-emerald-400 to-teal-600",
+    counters: [{ target: "enlace-malicioso", multiplier: 2.5 }],
   },
   {
+    id: "red-capa-2",
     name: "Red de Capa 2",
     type: "Escalabilidad",
     rarity: "Rara",
@@ -41,8 +46,10 @@ export const heroCards = [
     description: "Reduce el daño del 'Ataque de Gas Alto' a la mitad.",
     icon: Layers,
     gradient: "from-sky-400 to-blue-600",
+    counters: [{ target: "enlace-malicioso", multiplier: 1.4 }],
   },
   {
+    id: "frase-semilla",
     name: "Frase Semilla",
     type: "Recurso · Clave",
     rarity: "Legendaria",
@@ -52,8 +59,10 @@ export const heroCards = [
     description: "Tu llave maestra. Restaura tu mazo tras un hackeo.",
     icon: KeyRound,
     gradient: "from-amber-400 to-orange-600",
+    counters: [{ target: "enlace-malicioso", multiplier: 1.8 }],
   },
   {
+    id: "recompensa-staking",
     name: "Recompensa de Staking",
     type: "DeFi",
     rarity: "Rara",
@@ -63,8 +72,10 @@ export const heroCards = [
     description: "Genera energía pasiva cada turno mientras esté en juego.",
     icon: Coins,
     gradient: "from-lime-400 to-green-600",
+    counters: [], // passive — no specific counter
   },
   {
+    id: "enlace-malicioso",
     name: "Enlace Malicioso",
     type: "Amenaza · Enemigo",
     rarity: "Épica",
@@ -74,5 +85,6 @@ export const heroCards = [
     description: "Roba una carta si no tienes una 'Validación' activa.",
     icon: Bug,
     gradient: "from-rose-500 to-red-700",
+    counters: [{ target: "recompensa-staking", multiplier: 2.0 }],
   },
 ];
