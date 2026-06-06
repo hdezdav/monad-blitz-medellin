@@ -47,17 +47,15 @@ contract MonadRoad_NFTCards is ERC1155, Ownable {
 
     function mintStarterPack(address to) external onlyMinter {
         // Mint basic cards to the user
-        uint256[] memory ids = new uint256[](4);
+        uint256[] memory ids = new uint256[](3);
         ids[0] = CARD_PHISHING_FILTER;
         ids[1] = CARD_L2_CHANNEL;
         ids[2] = CARD_SHIELDED_CONTRACT;
-        ids[3] = CARD_IMMUTABLE_LEDGER;
 
-        uint256[] memory amounts = new uint256[](4);
+        uint256[] memory amounts = new uint256[](3);
         amounts[0] = 1;
         amounts[1] = 1;
         amounts[2] = 1;
-        amounts[3] = 1;
 
         _mintBatch(to, ids, amounts, "");
     }

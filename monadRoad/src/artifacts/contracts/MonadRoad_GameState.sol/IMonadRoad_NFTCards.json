@@ -1,0 +1,32 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "IMonadRoad_NFTCards",
+  "sourceName": "contracts/MonadRoad_GameState.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "bossId",
+          "type": "uint256"
+        }
+      ],
+      "name": "mintBossCard",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/MonadRoad_GameState.sol",
+  "buildInfoId": "solc-0_8_24-4f9edd7a7f721b0da936872ce925987f95603a38"
+}

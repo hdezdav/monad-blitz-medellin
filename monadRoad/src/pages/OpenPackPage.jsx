@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, PartyPopper } from "lucide-react";
-import { useAccount } from "wagmi";
+import { ArrowRight, PartyPopper, Loader2 } from "lucide-react";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { NFT_CARDS_ABI, CONTRACT_ADDRESSES } from "@/lib/contracts";
 
 import { BgGradient } from "@/components/ui/bg-gradient";
 import { Button } from "@/components/ui/button";
@@ -16,14 +17,35 @@ const starterPackIds = starterPack.map((c) => c.id);
 
 export default function OpenPackPage() {
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { hasOpenedPack, openPack } = useInventory();
   const [opened, setOpened] = useState(false);
 
+  // Wagmi contract integration
+  const { data: hash, writeContract, isPending } = useWriteContract();
+  
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
+    useWaitForTransactionReceipt({ hash });
+
   const handleOpen = () => {
-    // Add the 3 starter pack cards to the wallet inventory
-    openPack(starterPackIds);
-    setOpened(true);
+    if (import.meta.env.VITE_NFT_CARDS_ADDRESS) {
+      // Real contract execution
+      writeContract({
+        address: CONTRACT_ADDRESSES.NFT_CARDS,
+        abi: NFT_CARDS_ABI,
+        functionName: 'mintStarterPack',
+        args: [address],
+      }, {
+        onSuccess: () => {
+          openPack(starterPackIds);
+          setOpened(true);
+        }
+      });
+    } else {
+      // Fallback local simulation if contract is not deployed
+      openPack(starterPackIds);
+      setOpened(true);
+    }
   };
 
   return (
@@ -86,10 +108,18 @@ export default function OpenPackPage() {
                 </div>
               </div>
             ) : (
-              <GiftPack
-                cards={starterPack}
-                onOpened={handleOpen}
-              />
+              <div className="relative">
+                {(isPending || isConfirming) && (
+                  <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-3xl bg-black/40 backdrop-blur-sm text-white">
+                    <Loader2 className="h-10 w-10 animate-spin mb-2" />
+                    <span className="text-sm font-bold">Minteando NFTs...</span>
+                  </div>
+                )}
+                <GiftPack
+                  cards={starterPack}
+                  onOpened={handleOpen}
+                />
+              </div>
             )
           ) : (
             <div className="flex h-72 w-56 flex-col items-center justify-center rounded-3xl bg-slate-100 border-2 border-dashed border-slate-300 text-slate-400">

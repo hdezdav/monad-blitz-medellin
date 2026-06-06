@@ -27,6 +27,7 @@ async function main() {
   // Configure permissions
   console.log("Configurando permisos...");
   await nftCards.setMinter(gameStateAddress, true);
+  await gameState.setNFTContract(nftCardsAddress);
   console.log("✅ Permisos configurados");
 
   console.log("Despliegue completado.");

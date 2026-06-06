@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useMemo } from 'react'
+import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { heroCards } from '@/data/cards'
 
@@ -26,9 +26,23 @@ const InventoryContext = createContext(null)
 export function InventoryProvider({ children }) {
   const { address } = useAccount()
 
-  // ── State (replace with contract reads later) ──
-  const [ownedCardIds, setOwnedCardIds] = useState([])
-  const [hasOpenedPack, setHasOpenedPack] = useState(false)
+  // ── State (persisted locally for simulation until contracts are fully deployed) ──
+  const [ownedCardIds, setOwnedCardIds] = useState(() => {
+    const saved = localStorage.getItem("monadroad_cards");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [hasOpenedPack, setHasOpenedPack] = useState(() => {
+    return localStorage.getItem("monadroad_pack_opened") === "true";
+  });
+
+  // Sync to local storage
+  useEffect(() => {
+    localStorage.setItem("monadroad_cards", JSON.stringify(ownedCardIds));
+  }, [ownedCardIds]);
+
+  useEffect(() => {
+    localStorage.setItem("monadroad_pack_opened", hasOpenedPack.toString());
+  }, [hasOpenedPack]);
 
   // Resolve full card objects from the catalog
   const ownedCards = useMemo(
