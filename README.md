@@ -1,127 +1,75 @@
-# Guía de Contribución: Cómo hacer un Fork del Proyecto
+# 🃏 MonadRoad
+> Trading Card Game educativo sobre blockchain, construido en **Monad**.
 
-¡Gracias por tu interés en contribuir a este proyecto! Para comenzar a trabajar en tus propias modificaciones, debes crear una bifurcación (*fork*) del repositorio. A continuación, te explicamos el proceso paso a paso.
-
----
-
-## 1. ¿Qué es un Fork?
-
-Un *fork* es una copia personal de este repositorio que se almacena en tu cuenta de GitHub. Te permite experimentar libremente con cambios (como corregir errores o añadir nuevas funcionalidades) sin afectar el proyecto original.
+Aprende criptomonedas, seguridad Web3 y contratos inteligentes jugando — cada batalla es un concepto real, cada victoria es un NFT en tu wallet.
 
 ---
 
-## 2. Pasos para hacer un Fork y configurar tu Entorno
+## 🎮 Cómo funciona
 
-### Paso 1: Crear el Fork en GitHub
-1. Dirígete a la página principal de este repositorio en GitHub.
-2. En la esquina superior derecha de la página, haz clic en el botón **Fork**.
-3. Selecciona la cuenta personal o la organización de GitHub donde deseas guardar el fork.
-4. *(Opcional)* Puedes cambiar el nombre o mantener el original. Asegúrate de dejar seleccionada la opción para copiar únicamente la rama principal (`main`/`master`) si solo requieres trabajar en ella, o desmarcarla si necesitas conservar todas las ramas.
-5. Haz clic en el botón **Create fork**.
+1. **Conecta tu wallet** → el juego te guía desde cero si no tienes una
+2. **Recibe tu Starter Pack** → cartas NFT gratuitas para armar tu primer mazo
+3. **Combate y aprende** → cada enemigo representa una amenaza blockchain real
+4. **Captura al jefe** → al ganar, la carta del enemigo se mintea en tu wallet
 
-### Paso 2: Clonar tu Fork localmente
-Una vez creado el fork en tu perfil, clónalo en tu computadora local ejecutando el siguiente comando en tu terminal:
+### Las 3 Fases
+
+| Fase | Temática | Jefe |
+|---|---|---|
+| 🔹 Fase 1 — Primer Contacto | Wallets, bloques, transacciones | Hacker Duplicador |
+| 🔸 Fase 2 — La Red y la Seguridad | Phishing, ransomware, seed phrases | Ransomware Interceptor |
+| 🔺 Fase 3 — La Frontera Web3 | Smart Contracts, Gas, DeFi | Monstruo del Gas Alto |
+
+> **Evento especial Fase 2:** el enemigo "hackea" el juego en tiempo real y el jugador debe demostrar que tiene su seed phrase respaldada para ganar ventaja táctica — aprendizaje real integrado en la mecánica.
+
+---
+
+## 🃏 Cartas
+
+| Nombre | Rareza | ATK | DEF | Rol |
+|---|---|---|---|---|
+| Filtro Anti-Phishing | Common | 30 | 50 | Counter phishing |
+| Frase Semilla Física | Rare | 0 | 90 | Defensa / restauración |
+| Canal de Capa 2 (Rollup) | Common | 20 | 20 | Reduce gas fees |
+| Smart Contract Blindado | Common | 45 | 30 | Ataque directo |
+| Firma Digital (Llave Privada) | Rare | 60 | 10 | Daño doble si contrato expuesto |
+| Libro Contable Inmutable | Common | 15 | 60 | Revela cartas ocultas |
+| Paralelismo Monad | Legendary | 70 | 40 | Juega 2 cartas ofensivas en 1 turno |
+| Hacker Duplicador *(capturable)* | Legendary | 40 | 100 | Duplica efecto de tu próxima carta |
+| Ransomware Interceptor *(capturable)* | Legendary | 60 | 150 | Congela al rival 1 turno |
+| Monstruo del Gas Alto *(capturable)* | Legendary | 80 | 200 | Reduce cooldown entre salas |
+
+---
+
+## 📦 Contratos Inteligentes
+
+Todos los contratos están desplegados sobre **Monad** (EVM, ejecución paralela).
+
+| Contrato | Estándar | Dónde se usa |
+|---|---|---|
+| `MonadRoad_NFTCards.sol` | ERC-1155 | Minteo del Starter Pack gratuito, sobres de recompensa por fase y minteo de la carta del jefe al capturarlo |
+| `MonadRoad_GameState.sol` | Custom | Registro on-chain del progreso del jugador, verificación del evento educativo de seed phrase (Fase 2) y control de acceso entre fases |
+| `MonadRoad_DeckManager.sol` | Custom + ERC-1155 | Guardado y validación del mazo activo — verifica que el jugador posea las cartas que quiere usar antes de cada combate |
+
+---
+
+## 🛠️ Stack
+
+`Monad` · `Solidity` · `ERC-1155` · `React` · `Wagmi` · `RainbowKit` · `IPFS`
+
+---
+
+## 🚀 Setup
 
 ```bash
-git clone https://github.com/TU_USUARIO/NOMBRE-DEL-REPOSITORIO.git
-```
-> [!NOTE]  
-> Asegúrate de reemplazar `TU_USUARIO` con tu nombre de usuario de GitHub y `NOMBRE-DEL-REPOSITORIO` con el nombre del proyecto.
-
-Accede al directorio del proyecto clonado:
-```bash
-cd NOMBRE-DEL-REPOSITORIO
-```
-
-### Paso 3: Configurar el Repositorio Original como Remoto (Upstream)
-Para mantener tu fork actualizado con los últimos desarrollos y evitar conflictos al fusionar tu código, debes vincular el repositorio original como un control remoto adicional llamado `upstream`:
-
-```bash
-git remote add upstream https://github.com/PROPIETARIO-ORIGINAL/NOMBRE-DEL-REPOSITORIO.git
-```
-> [!NOTE]  
-> Reemplaza `PROPIETARIO-ORIGINAL` y `NOMBRE-DEL-REPOSITORIO` con los datos del repositorio original desde donde hiciste el fork.
-
-Para verificar que los remotos se configuraron correctamente, ejecuta:
-```bash
-git remote -v
-```
-Deberías ver una salida similar a esta:
-```text
-origin    https://github.com/TU_USUARIO/NOMBRE-DEL-REPOSITORIO.git (fetch)
-origin    https://github.com/TU_USUARIO/NOMBRE-DEL-REPOSITORIO.git (push)
-upstream  https://github.com/PROPIETARIO-ORIGINAL/NOMBRE-DEL-REPOSITORIO.git (fetch)
-upstream  https://github.com/PROPIETARIO-ORIGINAL/NOMBRE-DEL-REPOSITORIO.git (push)
+git clone https://github.com/tu-org/monadroad.git
+cd monadroad
+npm install
+npx hardhat compile
+npx hardhat run scripts/deploy.js --network monad-testnet
+npm run dev
 ```
 
 ---
 
-## 3. Flujo de Trabajo para Contribuir
-
-Sigue esta guía paso a paso cada vez que vayas a realizar una nueva contribución:
-
-### 1. Sincronizar tu Fork con el Repositorio Original
-Antes de crear una nueva rama de trabajo, es sumamente importante que incorpores las últimas actualizaciones del repositorio original a tu copia local:
-
-```bash
-# Asegúrate de estar en tu rama principal local
-git checkout main
-
-# Descarga los cambios más recientes del repositorio original (upstream)
-git fetch upstream
-
-# Fusiona los cambios descargados en tu rama local principal
-git merge upstream/main
-
-# Sube los cambios actualizados a tu fork en GitHub (origin)
-git push origin main
-```
-
-### 2. Crear una nueva Rama (Branch)
-Trabaja siempre en una rama dedicada para la funcionalidad, mejora o corrección que planeas realizar. Evita hacer commits directamente sobre la rama `main`:
-
-```bash
-git checkout -b mi-nueva-contribucion
-```
-*(Elige un nombre descriptivo y en minúsculas para tu rama, por ejemplo: `fix-login-error` o `feat-dark-mode`)*
-
-### 3. Realizar y Confirmar Cambios
-Realiza las modificaciones deseadas en el código. Para guardar el avance de tus cambios:
-
-```bash
-# Verifica qué archivos han sido modificados o agregados
-git status
-
-# Añade los archivos correspondientes al área de preparación (staging)
-git add archivo_modificado.js
-
-# Registra tus cambios con un mensaje de commit descriptivo
-git commit -m "feat: descripción concisa y clara del cambio aportado"
-```
-
-### 4. Subir la Rama a tu Fork
-Envía tu rama de trabajo con tus nuevos commits a tu repositorio remoto en GitHub:
-
-```bash
-git push origin mi-nueva-contribucion
-```
-
-### 5. Crear un Pull Request (PR)
-1. Abre tu navegador y ve a tu fork en GitHub (`https://github.com/TU_USUARIO/NOMBRE-DEL-REPOSITORIO`).
-2. Verás un banner superior de color amarillo que te indica que has subido una nueva rama. Haz clic en el botón **Compare & pull request**.
-3. Si el banner no aparece, dirígete a la pestaña **Pull requests** en el repositorio original y haz clic en **New pull request**. Luego, selecciona la opción *"compare across forks"* para enlazar tu fork y la rama específica.
-4. Escribe un título representativo y describe de forma detallada qué cambios realiza tu código, por qué son necesarios y cómo pueden probarse.
-5. Haz clic en **Create pull request**.
-
-¡Excelente trabajo! 🎉 El equipo de mantenedores del proyecto revisará tu propuesta, aportará comentarios si es necesario y, una vez aprobada, la fusionará con la rama principal del proyecto original.
-
----
-
-## Recursos Adicionales
-
-* [Documentación Oficial de GitHub: Trabajar con Forks](https://docs.github.com/es/pull-requests/collaborating-with-pull-requests/working-with-forks)
-* [Documentación Oficial de GitHub: Sincronizar un Fork](https://docs.github.com/es/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork)
-* [Guía interactiva para resolver conflictos de fusión (merge conflicts)](https://docs.github.com/es/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts)
-
----
-*¡Feliz código!* 🚀
+MIT License
