@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useAccount } from "wagmi";
+import { useAccount, useWriteContract, usePublicClient } from "wagmi";
 import {
   Swords,
   Shield,
@@ -11,17 +11,21 @@ import {
   RotateCcw,
   ArrowRight,
   Sparkles,
+  KeyRound,
+  ShieldAlert,
+  Loader2,
 } from "lucide-react";
 
 import { GameCard } from "@/components/game-card";
 import { heroCards } from "@/data/cards";
 import { useInventory } from "@/context/InventoryContext";
 import { ROUTES } from "../routes/paths";
+import { CONTRACT_ADDRESSES, DECK_MANAGER_ABI, GAME_STATE_ABI } from "@/lib/contracts";
 import "./BattlePage.css";
 
 /* ─── Constants ─── */
 const MAX_HAND_SIZE = 3;
-const HP_MULTIPLIER = 10;
+const HP_MULTIPLIER = 1;
 const PLAY_DELAY_MS = 1200;
 const DAMAGE_DISPLAY_MS = 1400;
 
@@ -46,27 +50,47 @@ function hpBarClass(pct) {
 }
 
 /* ─── Phases ─── */
-const PHASE = { PRE: "pre", BATTLE: "battle", POST: "post" };
-
-/* ─── Pick a random enemy (always the "threat" cards) ─── */
-function pickEnemy() {
-  // For now use the last card "Enlace Malicioso"
-  return heroCards[heroCards.length - 1];
-}
+const PHASE = { 
+  PRE: "pre", 
+  SAVING_DECK: "saving_deck",
+  BATTLE: "battle", 
+  RECORDING_VICTORY: "recording_victory",
+  POST: "post" 
+};
 
 /* ════════════════════════════════════════════════════════════
    BattlePage
    ════════════════════════════════════════════════════════════ */
 export default function BattlePage() {
   const { isConnected } = useAccount();
-  const { ownedCards, addCard } = useInventory();
+  const { 
+    ownedCards, 
+    currentPhase, 
+    hasSeedPhraseBackedUp,
+    hasDefeatedPhase3,
+    refetch,
+    isLoading: isInventoryLoading 
+  } = useInventory();
+
+  const publicClient = usePublicClient();
+  const { writeContractAsync } = useWriteContract();
 
   /* ── Game state ── */
   const [phase, setPhase] = useState(PHASE.PRE);
-  const [enemy] = useState(pickEnemy);
+  
+  // Pick boss based on current player phase
+  const enemy = useMemo(() => {
+    // Phase 1 -> Hacker Duplicador (8)
+    // Phase 2 -> Ransomware Interceptor (9)
+    // Phase 3 -> Monstruo del Gas Alto (10)
+    const bossId = currentPhase === 1 ? 8 : currentPhase === 2 ? 9 : 10;
+    return heroCards.find((c) => c.tokenId === bossId) || heroCards[heroCards.length - 1];
+  }, [currentPhase]);
 
   // Pre-battle: card selection
   const [selectedIds, setSelectedIds] = useState([]);
+  const [savingDeck, setSavingDeck] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
 
   // Battle state
   const [hand, setHand] = useState([]);
@@ -79,6 +103,10 @@ export default function BattlePage() {
   const [combatLog, setCombatLog] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [shakeEnemy, setShakeEnemy] = useState(false);
+
+  // Recording victory on-chain
+  const [recordingVictory, setRecordingVictory] = useState(false);
+  const [victoryError, setVictoryError] = useState("");
 
   // Post-battle
   const [didWin, setDidWin] = useState(false);
@@ -97,23 +125,89 @@ export default function BattlePage() {
     []
   );
 
-  /* ── Start battle ── */
-  const startBattle = useCallback(() => {
-    const selectedCards = selectedIds.map((id) =>
-      ownedCards.find((c) => c.id === id)
-    ).filter(Boolean);
-    const hp = enemy.defense * HP_MULTIPLIER;
-    setHand(selectedCards);
-    setPlayedIndices([]);
-    setEnemyHp(hp);
-    setMaxHp(hp);
-    setCurrentPlay(null);
-    setDamagePopup(null);
-    setCounterText(null);
-    setCombatLog([]);
-    roundRef.current = 0;
-    setPhase(PHASE.BATTLE);
-  }, [selectedIds, enemy, ownedCards]);
+  /* ── Start battle (calls saveDeck on-chain) ── */
+  const startBattle = async () => {
+    if (selectedIds.length < MAX_HAND_SIZE) return;
+    setSavingDeck(true);
+    try {
+      // Step 1: Save deck on-chain in DeckManager contract
+      const ids = selectedIds.map((id) => {
+        const card = ownedCards.find((c) => c.id === id);
+        return card ? card.tokenId : 0;
+      }).filter(Boolean);
+      const tx = await writeContractAsync({
+        address: CONTRACT_ADDRESSES.DECK_MANAGER,
+        abi: DECK_MANAGER_ABI,
+        functionName: "saveDeck",
+        args: [ids],
+      });
+      await publicClient.waitForTransactionReceipt({ hash: tx });
+
+      // Step 2: Setup local battle state
+      const selectedCards = selectedIds.map((id) =>
+        ownedCards.find((c) => c.id === id)
+      ).filter(Boolean);
+      const hp = enemy.defense * HP_MULTIPLIER;
+      
+      setHand(selectedCards);
+      setPlayedIndices([]);
+      setEnemyHp(hp);
+      setMaxHp(hp);
+      setCurrentPlay(null);
+      setDamagePopup(null);
+      setCounterText(null);
+      setCombatLog([]);
+      roundRef.current = 0;
+      setPhase(PHASE.BATTLE);
+    } catch (err) {
+      console.error(err);
+      alert("Error al registrar y validar tu mazo on-chain: " + (err.message || err));
+    } finally {
+      setSavingDeck(false);
+    }
+  };
+
+  /* ── Handle Educational Backup for Phase 2 ── */
+  const handleSeedBackup = async () => {
+    setBackingUp(true);
+    try {
+      const tx = await writeContractAsync({
+        address: CONTRACT_ADDRESSES.GAME_STATE,
+        abi: GAME_STATE_ABI,
+        functionName: "verifySeedPhraseBackup",
+      });
+      await publicClient.waitForTransactionReceipt({ hash: tx });
+      await refetch();
+    } catch (err) {
+      console.error(err);
+      alert("Error al respaldar frase semilla on-chain: " + (err.message || err));
+    } finally {
+      setBackingUp(false);
+    }
+  };
+
+  /* ── Record Victory on GameState ── */
+  const recordOnChainVictory = async () => {
+    setRecordingVictory(true);
+    setVictoryError("");
+    try {
+      const tx = await writeContractAsync({
+        address: CONTRACT_ADDRESSES.GAME_STATE,
+        abi: GAME_STATE_ABI,
+        functionName: "recordBossDefeat",
+        args: [BigInt(currentPhase)],
+      });
+      await publicClient.waitForTransactionReceipt({ hash: tx });
+      await refetch();
+      setDidWin(true);
+      setPhase(PHASE.POST);
+    } catch (err) {
+      console.error(err);
+      setVictoryError(err.message || "Error al emitir transacción.");
+    } finally {
+      setRecordingVictory(false);
+    }
+  };
 
   /* ── Play a card ── */
   const playCard = useCallback(
@@ -158,12 +252,16 @@ export default function BattlePage() {
           const allPlayed = round >= MAX_HAND_SIZE;
           if (newHp <= 0 || allPlayed) {
             const won = newHp <= 0;
-            // Future: this addCard call will trigger a contract mint/transfer
-            if (won) addCard(enemy.id);
-            setTimeout(() => {
-              setDidWin(won);
-              setPhase(PHASE.POST);
-            }, DAMAGE_DISPLAY_MS + 400);
+            if (won) {
+              setTimeout(() => {
+                setPhase(PHASE.RECORDING_VICTORY);
+              }, DAMAGE_DISPLAY_MS + 200);
+            } else {
+              setTimeout(() => {
+                setDidWin(false);
+                setPhase(PHASE.POST);
+              }, DAMAGE_DISPLAY_MS + 400);
+            }
           }
 
           return newHp;
@@ -181,6 +279,13 @@ export default function BattlePage() {
     },
     [hand, enemy, isPlaying, playedIndices]
   );
+
+  // Auto-trigger on-chain victory recording when phase switches to RECORDING_VICTORY
+  useEffect(() => {
+    if (phase === PHASE.RECORDING_VICTORY) {
+      recordOnChainVictory();
+    }
+  }, [phase]);
 
   /* ── Retry ── */
   const retry = useCallback(() => {
@@ -205,18 +310,48 @@ export default function BattlePage() {
               oponentes on-chain.
             </p>
           </div>
-        ) : ownedCards.length === 0 ? (
-          /* ── No cards yet ── */
+        ) : isInventoryLoading ? (
+          /* ── Loading state ── */
+          <div className="battle-locked">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <h3 className="battle-locked__title">Cargando inventario on-chain...</h3>
+            <p className="battle-locked__desc">Obteniendo tus cartas y nivel de la blockchain...</p>
+          </div>
+        ) : currentPhase === 0 ? (
+          /* ── Not registered ── */
           <div className="battle-locked">
             <span className="battle-locked__icon">📦</span>
-            <h3 className="battle-locked__title">No tienes cartas</h3>
+            <h3 className="battle-locked__title">No estás registrado</h3>
             <p className="battle-locked__desc">
-              Abre tu primer sobre de regalo para recibir cartas y poder
-              entrar en combate.
+              Debes conseguir tus cartas iniciales y registrar tu progreso para combatir.
             </p>
             <Link to={ROUTES.pack} className="btn-start-battle" style={{ marginTop: 16 }}>
-              Abrir mi Sobre
+              Conseguir Starter Pack
             </Link>
+          </div>
+        ) : hasDefeatedPhase3 || currentPhase > 3 ? (
+          /* ── Game Completed ── */
+          <div className="battle-locked">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 180 }}
+            >
+              <Trophy size={72} color="#fbbf24" strokeWidth={1.5} className="mb-4" />
+            </motion.div>
+            <h3 className="battle-locked__title">¡Leyenda Web3!</h3>
+            <p className="battle-locked__desc" style={{ maxWidth: 420 }}>
+              Has derrotado a todos los jefes y completado Monad Road con éxito. 
+              Posees las cartas legendarias de Hacker Duplicador, Ransomware Interceptor y Monstruo del Gas Alto.
+            </p>
+            <div className="flex gap-4 mt-6">
+              <Link to={ROUTES.cards} className="btn-start-battle">
+                Ver Colección
+              </Link>
+              <Link to={ROUTES.home} className="btn-secondary">
+                Inicio
+              </Link>
+            </div>
           </div>
         ) : (
           <>
@@ -234,7 +369,7 @@ export default function BattlePage() {
                   {/* Header */}
                   <div className="pre-battle__header">
                     <span className="pre-battle__badge">
-                      <Swords size={14} /> Arena de Combate
+                      <Swords size={14} /> Arena de Combate · Fase {currentPhase}
                     </span>
                     <h1 className="pre-battle__title">
                       Elige tu <span>Estrategia</span>
@@ -245,6 +380,45 @@ export default function BattlePage() {
                     </p>
                   </div>
 
+                  {/* Phase 2 Educational Event Banner */}
+                  {currentPhase === 2 && !hasSeedPhraseBackedUp && (
+                    <motion.div 
+                      className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-left"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="rounded-xl bg-amber-500/20 p-2 text-amber-500">
+                          <ShieldAlert size={24} />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-base font-bold text-amber-600">Alerta de Seguridad: Malware Detectado</h4>
+                          <p className="text-sm text-slate-600 mt-1">
+                            El <strong>Ransomware Interceptor</strong> tiene la capacidad de congelar y encriptar tu mazo. 
+                            Debes respaldar una frase semilla física en la blockchain para inmunizar tu deck antes de luchar.
+                          </p>
+                          <Button 
+                            className="mt-4 bg-amber-600 hover:bg-amber-700 text-white gap-2 shadow-lg"
+                            onClick={handleSeedBackup}
+                            disabled={backingUp}
+                          >
+                            {backingUp ? (
+                              <>
+                                <Loader2 size={16} className="animate-spin" />
+                                Creando Respaldo On-Chain...
+                              </>
+                            ) : (
+                              <>
+                                <KeyRound size={16} />
+                                Respaldar Frase Semilla
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* Enemy preview */}
                   <motion.div
                     className="enemy-preview"
@@ -253,7 +427,7 @@ export default function BattlePage() {
                     transition={{ delay: 0.15 }}
                   >
                     <span className="enemy-preview__label">
-                      Próximo Enemigo
+                      Jefe Actual de la Sala
                     </span>
                     <h2 className="enemy-preview__name">{enemy.name}</h2>
                     <span className="enemy-preview__type">{enemy.type}</span>
@@ -331,16 +505,30 @@ export default function BattlePage() {
                   <div className="pre-battle__actions">
                     <button
                       className="btn-start-battle"
-                      disabled={selectedIds.length < MAX_HAND_SIZE}
+                      disabled={selectedIds.length < MAX_HAND_SIZE || (currentPhase === 2 && !hasSeedPhraseBackedUp) || savingDeck}
                       onClick={startBattle}
                     >
-                      <Swords size={18} />
-                      Iniciar Combate
+                      {savingDeck ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Validando en blockchain...
+                        </>
+                      ) : (
+                        <>
+                          <Swords size={18} />
+                          Iniciar Combate
+                        </>
+                      )}
                     </button>
                     {selectedIds.length < MAX_HAND_SIZE && (
                       <span className="pre-battle__hint">
                         Selecciona {MAX_HAND_SIZE - selectedIds.length} carta
                         {MAX_HAND_SIZE - selectedIds.length !== 1 && "s"} más
+                      </span>
+                    )}
+                    {currentPhase === 2 && !hasSeedPhraseBackedUp && (
+                      <span className="pre-battle__hint text-amber-600 font-semibold">
+                        Debes realizar el respaldo de frase semilla para iniciar
                       </span>
                     )}
                   </div>
@@ -503,6 +691,36 @@ export default function BattlePage() {
                 </motion.div>
               )}
 
+              {/* ═══════ PHASE: RECORDING_VICTORY ═══════ */}
+              {phase === PHASE.RECORDING_VICTORY && (
+                <motion.div
+                  key="recording"
+                  className="battle-locked"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+                  <h3 className="battle-locked__title">¡Victoria Conseguida!</h3>
+                  <p className="battle-locked__desc" style={{ maxWidth: 400 }}>
+                    Registrando la derrota del jefe y minteando tu NFT de recompensa en Monad Testnet...
+                  </p>
+                  
+                  {victoryError && (
+                    <div className="mt-4 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-600 text-sm">
+                      <p className="font-bold">Error al confirmar transacción:</p>
+                      <p className="mt-1 text-xs opacity-80">{victoryError}</p>
+                      <Button 
+                        onClick={recordOnChainVictory}
+                        className="mt-3 bg-red-600 hover:bg-red-700 text-white gap-2"
+                      >
+                        Reintentar Registro
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
               {/* ═══════ PHASE: POST-BATTLE ═══════ */}
               {phase === PHASE.POST && (
                 <motion.div
@@ -553,8 +771,7 @@ export default function BattlePage() {
 
                       <h1 className="victory-title">¡Victoria!</h1>
                       <p className="post-battle__subtitle">
-                        Has derrotado a {enemy.name}. Su NFT ha sido reclamado
-                        y añadido a tu wallet.
+                        Has derrotado a {enemy.name}. Su NFT ha sido reclamado y añadido a tu wallet.
                       </p>
 
                       {/* NFT claimed */}
@@ -575,7 +792,7 @@ export default function BattlePage() {
                           Ver mi Colección <ArrowRight size={16} />
                         </Link>
                         <button className="btn-secondary" onClick={retry}>
-                          <RotateCcw size={14} /> Otra Batalla
+                          <RotateCcw size={14} /> Siguiente Fase
                         </button>
                       </div>
                     </>

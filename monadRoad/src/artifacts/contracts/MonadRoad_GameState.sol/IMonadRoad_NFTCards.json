@@ -20,6 +20,24 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "phase",
+          "type": "uint256"
+        }
+      ],
+      "name": "mintRewardPack",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ],
   "bytecode": "0x",
@@ -28,5 +46,5 @@
   "deployedLinkReferences": {},
   "immutableReferences": {},
   "inputSourceName": "project/contracts/MonadRoad_GameState.sol",
-  "buildInfoId": "solc-0_8_24-4f9edd7a7f721b0da936872ce925987f95603a38"
+  "buildInfoId": "solc-0_8_28-8532a79e7fecf360ae0038060d9a7424a5c83ca4"
 }

@@ -24,8 +24,10 @@ contract MonadRoad_NFTCards is ERC1155, Ownable {
     uint256 public constant BOSS_HIGH_GAS_MONSTER = 10;
 
     mapping(address => bool) public authorizedMinters;
+    mapping(address => bool) public hasClaimedStarter;
 
     event MinterStatusChanged(address minter, bool status);
+    event StarterClaimed(address player);
 
     constructor(string memory uri) ERC1155(uri) Ownable(msg.sender) {
         // Example base URI: "ipfs://QmYourIpfsCID/{id}.json"
@@ -45,19 +47,26 @@ contract MonadRoad_NFTCards is ERC1155, Ownable {
         _setURI(newuri);
     }
 
-    function mintStarterPack(address to) external onlyMinter {
+    // Changed to public so players can claim their starter pack directly
+    function mintStarterPack(address to) external {
+        require(!hasClaimedStarter[to], "Starter pack already claimed");
+        hasClaimedStarter[to] = true;
+
         // Mint basic cards to the user
-        uint256[] memory ids = new uint256[](3);
+        uint256[] memory ids = new uint256[](4);
         ids[0] = CARD_PHISHING_FILTER;
         ids[1] = CARD_L2_CHANNEL;
         ids[2] = CARD_SHIELDED_CONTRACT;
+        ids[3] = CARD_IMMUTABLE_LEDGER;
 
-        uint256[] memory amounts = new uint256[](3);
+        uint256[] memory amounts = new uint256[](4);
         amounts[0] = 1;
         amounts[1] = 1;
         amounts[2] = 1;
+        amounts[3] = 1;
 
         _mintBatch(to, ids, amounts, "");
+        emit StarterClaimed(to);
     }
 
     function mintRewardPack(address to, uint256 phase) external onlyMinter {
@@ -76,6 +85,7 @@ contract MonadRoad_NFTCards is ERC1155, Ownable {
         _mint(to, bossId, 1, "");
     }
 
+    // Admin/Minter functions
     function mint(address account, uint256 id, uint256 amount, bytes memory data) public onlyMinter {
         _mint(account, id, amount, data);
     }

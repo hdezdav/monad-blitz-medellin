@@ -1,16 +1,20 @@
-require("@nomicfoundation/hardhat-toolbox");
-require("dotenv").config();
+import hardhatEthers from "@nomicfoundation/hardhat-ethers";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
-module.exports = {
+export default {
+  plugins: [hardhatEthers],
   solidity: {
-    version: "0.8.24",
+    version: "0.8.28",
     settings: {
-      evmVersion: "cancun"
+      evmVersion: "prague"
     }
   },
   networks: {
     monadTestnet: {
+      type: "http",
       url: "https://testnet-rpc.monad.xyz",
       chainId: 10143,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []

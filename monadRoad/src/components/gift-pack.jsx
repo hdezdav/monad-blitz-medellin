@@ -1,25 +1,16 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gift, Sparkles } from "lucide-react";
 import { GameCard } from "@/components/game-card";
 
-export function GiftPack({ cards, onOpened }) {
-  const [opened, setOpened] = useState(false);
-
-  const open = () => {
-    if (opened) return;
-    setOpened(true);
-    onOpened?.();
-  };
-
+export function GiftPack({ cards, onOpened, isOpened }) {
   return (
     <div className="flex flex-col items-center">
       <AnimatePresence mode="wait">
-        {!opened ? (
+        {!isOpened ? (
           <motion.button
             key="pack"
             type="button"
-            onClick={open}
+            onClick={onOpened}
             initial={{ scale: 0.6, opacity: 0, rotate: -8 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             exit={{ scale: 1.3, opacity: 0 }}

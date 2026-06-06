@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, PartyPopper, Loader2 } from "lucide-react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { NFT_CARDS_ABI, CONTRACT_ADDRESSES } from "@/lib/contracts";
+import { useAccount, useWriteContract, usePublicClient } from "wagmi";
+import { NFT_CARDS_ABI, GAME_STATE_ABI, CONTRACT_ADDRESSES } from "@/lib/contracts";
 
 import { BgGradient } from "@/components/ui/bg-gradient";
 import { Button } from "@/components/ui/button";
@@ -12,39 +12,60 @@ import { heroCards } from "@/data/cards";
 import { useInventory } from "@/context/InventoryContext";
 import { ROUTES } from "../routes/paths";
 
-const starterPack = heroCards.slice(0, 3);
-const starterPackIds = starterPack.map((c) => c.id);
+const starterPack = [
+  heroCards.find((c) => c.tokenId === 1),
+  heroCards.find((c) => c.tokenId === 3),
+  heroCards.find((c) => c.tokenId === 4),
+  heroCards.find((c) => c.tokenId === 6),
+].filter(Boolean);
 
 export default function OpenPackPage() {
   const navigate = useNavigate();
   const { isConnected, address } = useAccount();
-  const { hasOpenedPack, openPack } = useInventory();
+  const { hasOpenedPack, ownedCardIds, refetch } = useInventory();
   const [opened, setOpened] = useState(false);
+  const [txStep, setTxStep] = useState(0); // 0: Idle, 1: Minting NFTs, 2: Registering Game, 3: Completed
+  const [errorText, setErrorText] = useState("");
 
-  // Wagmi contract integration
-  const { data: hash, writeContract, isPending } = useWriteContract();
-  
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
-    useWaitForTransactionReceipt({ hash });
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
 
-  const handleOpen = () => {
-    if (import.meta.env.VITE_NFT_CARDS_ADDRESS) {
-      // Real contract execution
-      writeContract({
+  const isAlreadyPackOpened = hasOpenedPack && ownedCardIds.length > 0;
+
+  const handleOpen = async () => {
+    if (txStep > 0) return;
+    setErrorText("");
+    try {
+      // Step 1: Mint Starter Pack
+      setTxStep(1);
+      const mintTx = await writeContractAsync({
         address: CONTRACT_ADDRESSES.NFT_CARDS,
         abi: NFT_CARDS_ABI,
         functionName: 'mintStarterPack',
         args: [address],
-      }, {
-        onSuccess: () => {
-          openPack(starterPackIds);
-          setOpened(true);
-        }
       });
-    } else {
-      // Fallback local simulation if contract is not deployed
-      openPack(starterPackIds);
+      await publicClient.waitForTransactionReceipt({ hash: mintTx });
+
+      // Step 2: Register Player in GameState (if not already registered)
+      setTxStep(2);
+      if (!hasOpenedPack) {
+        const registerTx = await writeContractAsync({
+          address: CONTRACT_ADDRESSES.GAME_STATE,
+          abi: GAME_STATE_ABI,
+          functionName: 'registerPlayer',
+        });
+        await publicClient.waitForTransactionReceipt({ hash: registerTx });
+      }
+
+      // Sync the context state
+      await refetch();
+      
+      setTxStep(3);
       setOpened(true);
+    } catch (err) {
+      console.error(err);
+      setErrorText(err.message || "Error al procesar transacciones en la red.");
+      setTxStep(0);
     }
   };
 
@@ -58,7 +79,7 @@ export default function OpenPackPage() {
       />
 
       {/* Confetti dummy */}
-      {Array.from({ length: 18 }).map((_, i) => (
+      {(opened || isAlreadyPackOpened) && Array.from({ length: 18 }).map((_, i) => (
         <motion.span
           key={i}
           className="pointer-events-none absolute top-0 h-2 w-2 rounded-sm"
@@ -92,15 +113,21 @@ export default function OpenPackPage() {
         <p className="mt-4 max-w-lg text-lg text-muted-foreground">
           {!isConnected
             ? "Conecta tu wallet para abrir tu primer sobre y empezar."
-            : hasOpenedPack
+            : isAlreadyPackOpened
               ? "Ya abriste tu sobre inicial. ¡Revisa tus cartas o ve al combate!"
-              : "Tu wallet está vinculada. Abre el sobre para descubrir tus primeras cartas NFT y armar tu mazo inicial."}
+              : "Tu wallet está vinculada. Abre el sobre para descubrir tus primeras cartas NFT y registrarte en el juego."}
         </p>
+
+        {errorText && (
+          <p className="mt-4 max-w-md text-sm text-red-500 font-semibold bg-red-50 px-4 py-2 rounded-lg border border-red-200 break-words">
+            {errorText}
+          </p>
+        )}
 
         <div className="mt-12">
           {isConnected ? (
-            hasOpenedPack && !opened ? (
-              /* Already opened in a previous session (future: from contract state) */
+            isAlreadyPackOpened && !opened ? (
+              /* Already opened */
               <div className="flex flex-col items-center gap-4">
                 <div className="flex h-72 w-56 flex-col items-center justify-center rounded-3xl bg-primary/5 border-2 border-dashed border-primary/30 text-primary/60">
                   <span className="text-4xl mb-2">📦</span>
@@ -109,15 +136,23 @@ export default function OpenPackPage() {
               </div>
             ) : (
               <div className="relative">
-                {(isPending || isConfirming) && (
-                  <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-3xl bg-black/40 backdrop-blur-sm text-white">
-                    <Loader2 className="h-10 w-10 animate-spin mb-2" />
-                    <span className="text-sm font-bold">Minteando NFTs...</span>
+                {txStep > 0 && txStep < 3 && (
+                  <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-3xl bg-black/70 backdrop-blur-sm text-white p-6">
+                    <Loader2 className="h-10 w-10 animate-spin mb-3 text-primary" />
+                    <span className="text-sm font-bold text-center">
+                      {txStep === 1
+                        ? "Paso 1/2: Minteando tus cartas iniciales (NFTs)..."
+                        : "Paso 2/2: Registrando tu progreso en Monad Testnet..."}
+                    </span>
+                    <span className="text-xs text-slate-400 mt-2 text-center">
+                      Por favor, firma la transacción en tu wallet.
+                    </span>
                   </div>
                 )}
                 <GiftPack
                   cards={starterPack}
                   onOpened={handleOpen}
+                  isOpened={opened}
                 />
               </div>
             )
@@ -129,7 +164,7 @@ export default function OpenPackPage() {
           )}
         </div>
 
-        {(opened || hasOpenedPack) && (
+        {(opened || isAlreadyPackOpened) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

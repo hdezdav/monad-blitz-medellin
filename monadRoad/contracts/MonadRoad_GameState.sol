@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IMonadRoad_NFTCards {
     function mintBossCard(address to, uint256 bossId) external;
+    function mintRewardPack(address to, uint256 phase) external;
 }
 
 contract MonadRoad_GameState is Ownable {
@@ -43,9 +44,6 @@ contract MonadRoad_GameState is Ownable {
     }
 
     function recordBossDefeat(uint256 phase) external {
-        // In a real app, this might be restricted to an authorized backend/server 
-        // to prevent users from just calling it. For the demo, we allow self-reporting.
-        
         PlayerState storage state = players[msg.sender];
         require(state.currentPhase == phase, "Player is not in this phase");
 
@@ -55,9 +53,10 @@ contract MonadRoad_GameState is Ownable {
             emit BossDefeated(msg.sender, 1);
             emit PhaseAdvanced(msg.sender, 2);
             
-            // Mint Boss 1
+            // Mint Boss 1 & Phase 1 Reward Pack (which has physical seed card)
             if (address(nftContract) != address(0)) {
                 nftContract.mintBossCard(msg.sender, 8); // BOSS_DUPLICATOR_HACKER
+                nftContract.mintRewardPack(msg.sender, 1); // CARD_PHYSICAL_SEED (2)
             }
         } else if (phase == 2) {
             require(state.hasSeedPhraseBackedUp, "Must backup seed phrase to defeat boss");
@@ -66,17 +65,22 @@ contract MonadRoad_GameState is Ownable {
             emit BossDefeated(msg.sender, 2);
             emit PhaseAdvanced(msg.sender, 3);
 
-            // Mint Boss 2
+            // Mint Boss 2 & Phase 2 Reward Pack (which has digital signature card)
             if (address(nftContract) != address(0)) {
                 nftContract.mintBossCard(msg.sender, 9); // BOSS_RANSOMWARE_INTERCEPTOR
+                nftContract.mintRewardPack(msg.sender, 2); // CARD_DIGITAL_SIGNATURE (5)
             }
         } else if (phase == 3) {
             state.hasDefeatedPhase3 = true;
+            // Advance to Phase 4 (Completion)
+            state.currentPhase = 4;
             emit BossDefeated(msg.sender, 3);
+            emit PhaseAdvanced(msg.sender, 4);
             
-            // Mint Boss 3
+            // Mint Boss 3 & Phase 3 Reward Pack (which has parallel monad card)
             if (address(nftContract) != address(0)) {
                 nftContract.mintBossCard(msg.sender, 10); // BOSS_HIGH_GAS_MONSTER
+                nftContract.mintRewardPack(msg.sender, 3); // CARD_MONAD_PARALLELISM (7)
             }
         }
     }

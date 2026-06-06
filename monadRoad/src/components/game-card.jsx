@@ -4,20 +4,42 @@ import { Shield, Swords, Zap } from "lucide-react";
 
 const rarityRing = {
   Común: "ring-slate-300",
+  common: "ring-slate-300",
   Rara: "ring-sky-400",
+  rare: "ring-sky-400",
   Épica: "ring-fuchsia-400",
+  epic: "ring-fuchsia-400",
   Legendaria: "ring-amber-400",
+  legendary: "ring-amber-400",
 };
 
 const rarityBadge = {
   Común: "bg-slate-100 text-slate-600",
+  common: "bg-slate-100 text-slate-600",
   Rara: "bg-sky-100 text-sky-700",
+  rare: "bg-sky-100 text-sky-700",
   Épica: "bg-fuchsia-100 text-fuchsia-700",
+  epic: "bg-fuchsia-100 text-fuchsia-700",
   Legendaria: "bg-amber-100 text-amber-700",
+  legendary: "bg-amber-100 text-amber-700",
 };
 
 export function GameCard({ card, className, style }) {
   const Icon = card.icon;
+  
+  // Extract stats supporting both new nested format and legacy format
+  const attack = card.stats?.attack ?? card.attack ?? 0;
+  const defense = card.stats?.defense ?? card.defense ?? 0;
+  const energy = card.stats?.cost ?? card.energy ?? 0;
+  
+  // Format rarity label for display
+  const rarityLabel = 
+    card.rarity === "common" ? "Común" : 
+    card.rarity === "rare" ? "Rara" : 
+    card.rarity === "epic" ? "Épica" : 
+    card.rarity === "legendary" ? "Legendaria" : 
+    card.rarity;
+
   return (
     <motion.div
       style={style}
@@ -37,9 +59,13 @@ export function GameCard({ card, className, style }) {
         )}
       >
         <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_40%)]" />
-        <Icon className="h-16 w-16 text-white drop-shadow-lg" strokeWidth={1.5} />
+        {Icon ? (
+          <Icon className="h-16 w-16 text-white drop-shadow-lg" strokeWidth={1.5} />
+        ) : (
+          <span className="text-4xl text-white">🎴</span>
+        )}
         <span className="absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-sm font-bold text-monad-ink shadow">
-          {card.energy}
+          {energy}
         </span>
         <span
           className={cn(
@@ -47,7 +73,7 @@ export function GameCard({ card, className, style }) {
             rarityBadge[card.rarity] || "bg-slate-100 text-slate-600"
           )}
         >
-          {card.rarity}
+          {rarityLabel}
         </span>
       </div>
 
@@ -65,13 +91,13 @@ export function GameCard({ card, className, style }) {
 
         <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-xs font-semibold">
           <span className="flex items-center gap-1 text-rose-500">
-            <Swords className="h-3.5 w-3.5" /> {card.attack}
+            <Swords className="h-3.5 w-3.5" /> {attack}
           </span>
           <span className="flex items-center gap-1 text-sky-500">
-            <Shield className="h-3.5 w-3.5" /> {card.defense}
+            <Shield className="h-3.5 w-3.5" /> {defense}
           </span>
           <span className="flex items-center gap-1 text-amber-500">
-            <Zap className="h-3.5 w-3.5" /> {card.energy}
+            <Zap className="h-3.5 w-3.5" /> {energy}
           </span>
         </div>
       </div>

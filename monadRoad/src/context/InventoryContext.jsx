@@ -1,108 +1,143 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { heroCards } from '@/data/cards'
-
-/**
- * WalletInventoryContext
- *
- * Manages the player's card collection (NFT inventory).
- *
- * ── Current implementation ──
- * In-memory React state. Cards start empty and are added via openPack / addCard.
- * State resets on page reload (no localStorage by design).
- *
- * ── Future contract integration ──
- * Replace the state hooks below with on-chain reads:
- *   - ownedCardIds  → read from ERC-721 / ERC-1155 balanceOf per card token
- *   - addCard()     → call contract mint / transfer, then refetch
- *   - openPack()    → call contract mintPack(), then refetch
- *   - hasOpenedPack → check if user holds any tokens from the pack contract
- *
- * The public API (useInventory) stays the same, so pages don't change.
- */
+import { CONTRACT_ADDRESSES, NFT_CARDS_ABI, GAME_STATE_ABI } from '@/lib/contracts'
 
 const InventoryContext = createContext(null)
 
 export function InventoryProvider({ children }) {
   const { address } = useAccount()
 
-  // ── State (persisted locally for simulation until contracts are fully deployed) ──
-  const [ownedCardIds, setOwnedCardIds] = useState(() => {
-    const saved = localStorage.getItem("monadroad_cards");
-    return saved ? JSON.parse(saved) : [];
+  // 1. Fetch balances of all 10 cards from NFT_CARDS contract on-chain
+  const { data: balances, refetch: refetchBalances, isLoading: isLoadingBalances } = useReadContract({
+    address: CONTRACT_ADDRESSES.NFT_CARDS,
+    abi: NFT_CARDS_ABI,
+    functionName: 'balanceOfBatch',
+    args: address ? [
+      Array(10).fill(address),
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    ] : undefined,
+    query: {
+      enabled: !!address,
+    }
   });
-  const [hasOpenedPack, setHasOpenedPack] = useState(() => {
-    return localStorage.getItem("monadroad_pack_opened") === "true";
+
+  // 2. Fetch PlayerState from GAME_STATE contract on-chain
+  const { data: playerState, refetch: refetchGameState, isLoading: isLoadingGameState } = useReadContract({
+    address: CONTRACT_ADDRESSES.GAME_STATE,
+    abi: GAME_STATE_ABI,
+    functionName: 'getPlayerState',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    }
   });
 
-  // Sync to local storage
-  useEffect(() => {
-    localStorage.setItem("monadroad_cards", JSON.stringify(ownedCardIds));
-  }, [ownedCardIds]);
+  // Derive ownedCardIds based on balances returned from ERC1155 contract
+  const ownedCardIds = useMemo(() => {
+    if (!balances) return [];
+    return balances
+      .map((bal, idx) => (bal > 0n ? idx + 1 : null))
+      .filter((id) => id !== null);
+  }, [balances]);
 
-  useEffect(() => {
-    localStorage.setItem("monadroad_pack_opened", hasOpenedPack.toString());
-  }, [hasOpenedPack]);
-
-  // Resolve full card objects from the catalog
+  // Resolve full card objects from the catalog matching on tokenId
   const ownedCards = useMemo(
     () => ownedCardIds
-      .map((id) => heroCards.find((c) => c.id === id))
+      .map((tokenId) => heroCards.find((c) => c.tokenId === tokenId))
       .filter(Boolean),
     [ownedCardIds]
-  )
+  );
 
-  /**
-   * Open the starter pack — adds the first 3 cards to the inventory.
-   * Future: this will call the pack contract's mint function.
-   */
-  const openPack = useCallback(
-    (cardIds) => {
-      if (hasOpenedPack) return
-      setOwnedCardIds((prev) => [...prev, ...cardIds])
-      setHasOpenedPack(true)
-    },
-    [hasOpenedPack]
-  )
+  // Check if player has registered / opened their pack
+  const hasOpenedPack = useMemo(() => {
+    if (!playerState) return false;
+    const currentPhase = Number(playerState[0] || playerState.currentPhase || 0);
+    return currentPhase > 0;
+  }, [playerState]);
 
-  /**
-   * Add a single card to the inventory (e.g. won from battle).
-   * Future: this will call the NFT contract's transfer/mint function.
-   */
-  const addCard = useCallback((cardId) => {
-    setOwnedCardIds((prev) => {
-      if (prev.includes(cardId)) return prev // prevent duplicates
-      return [...prev, cardId]
-    })
-  }, [])
+  // Extract other game states from playerState
+  const currentPhase = useMemo(() => {
+    if (!playerState) return 0;
+    return Number(playerState[0] || playerState.currentPhase || 0);
+  }, [playerState]);
 
-  /**
-   * Check if the player owns a specific card.
-   */
+  const hasSeedPhraseBackedUp = useMemo(() => {
+    if (!playerState) return false;
+    return !!(playerState[1] || playerState.hasSeedPhraseBackedUp);
+  }, [playerState]);
+
+  const hasDefeatedPhase1 = useMemo(() => {
+    if (!playerState) return false;
+    return !!(playerState[2] || playerState.hasDefeatedPhase1);
+  }, [playerState]);
+
+  const hasDefeatedPhase2 = useMemo(() => {
+    if (!playerState) return false;
+    return !!(playerState[3] || playerState.hasDefeatedPhase2);
+  }, [playerState]);
+
+  const hasDefeatedPhase3 = useMemo(() => {
+    if (!playerState) return false;
+    return !!(playerState[4] || playerState.hasDefeatedPhase3);
+  }, [playerState]);
+
+  // Refetch all on-chain states
+  const refetchAll = useCallback(async () => {
+    await Promise.all([
+      refetchBalances(),
+      refetchGameState()
+    ]);
+  }, [refetchBalances, refetchGameState]);
+
+  // Refetch automatically when address changes
+  useEffect(() => {
+    if (address) {
+      refetchAll();
+    }
+  }, [address, refetchAll]);
+
   const ownsCard = useCallback(
-    (cardId) => ownedCardIds.includes(cardId),
-    [ownedCardIds]
-  )
+    (cardId) => {
+      // Support checking by string ID or numeric tokenId
+      return ownedCards.some(
+        (c) => c.id === cardId || c.tokenId === Number(cardId)
+      );
+    },
+    [ownedCards]
+  );
 
   const value = useMemo(
     () => ({
-      /** The connected wallet address */
       address,
-      /** Array of owned card IDs */
       ownedCardIds,
-      /** Array of full card objects the player owns */
       ownedCards,
-      /** Whether the player has opened their starter pack */
       hasOpenedPack,
-      /** Open the starter pack (accepts array of card IDs to add) */
-      openPack,
-      /** Add a single card by ID (e.g. battle reward) */
-      addCard,
-      /** Check if a card ID is owned */
+      currentPhase,
+      hasSeedPhraseBackedUp,
+      hasDefeatedPhase1,
+      hasDefeatedPhase2,
+      hasDefeatedPhase3,
+      isLoading: isLoadingBalances || isLoadingGameState,
       ownsCard,
+      refetch: refetchAll,
     }),
-    [address, ownedCardIds, ownedCards, hasOpenedPack, openPack, addCard, ownsCard]
-  )
+    [
+      address,
+      ownedCardIds,
+      ownedCards,
+      hasOpenedPack,
+      currentPhase,
+      hasSeedPhraseBackedUp,
+      hasDefeatedPhase1,
+      hasDefeatedPhase2,
+      hasDefeatedPhase3,
+      isLoadingBalances,
+      isLoadingGameState,
+      ownsCard,
+      refetchAll
+    ]
+  );
 
   return (
     <InventoryContext.Provider value={value}>
@@ -111,10 +146,6 @@ export function InventoryProvider({ children }) {
   )
 }
 
-/**
- * Hook to access the wallet inventory.
- * Must be used within <InventoryProvider>.
- */
 export function useInventory() {
   const ctx = useContext(InventoryContext)
   if (!ctx) {
