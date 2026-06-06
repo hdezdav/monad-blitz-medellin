@@ -25,7 +25,7 @@ export function GiftPack({ cards, onOpened }) {
             exit={{ scale: 1.3, opacity: 0 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="group relative flex h-72 w-56 flex-col items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-monad via-monad-dark to-monad-ink text-white shadow-2xl shadow-primary/40"
+            className="group relative flex h-72 w-56 flex-col items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-monad via-monad-dark to-monad-ink text-white shadow-2xl border border-monad-dark/50 animate-purple-glow"
           >
             {/* shimmer sweep */}
             <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-shimmer" />

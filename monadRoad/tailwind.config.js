@@ -67,11 +67,22 @@ export default {
         "shimmer": {
           "100%": { transform: "translateX(100%)" },
         },
+        "purple-glow": {
+          "0%, 100%": {
+            boxShadow: "0 0 12px rgba(131, 110, 249, 0.4)",
+            borderColor: "rgba(131, 110, 249, 0.4)"
+          },
+          "50%": {
+            boxShadow: "0 0 28px rgba(131, 110, 249, 0.85), 0 0 12px rgba(131, 110, 249, 0.5)",
+            borderColor: "rgba(131, 110, 249, 0.8)"
+          }
+        }
       },
       animation: {
         "fade-in": "fade-in 0.7s ease-out",
         "float": "float 6s ease-in-out infinite",
         "shimmer": "shimmer 2s infinite",
+        "purple-glow": "purple-glow 1.8s infinite ease-in-out",
       },
     },
   },
