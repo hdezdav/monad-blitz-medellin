@@ -78,10 +78,11 @@ export default function LandingPage() {
   ];
 
   return (
-    // Cambiamos overflow-hidden a overflow-x-hidden para permitir el scroll vertical
-    <div className="relative min-h-screen overflow-x-hidden">
+    // Limitamos a h-screen (100% del alto) y activamos scroll interno.
+    // Si está conectado, activamos el "snap-y" para el efecto magnético.
+    <div className={`relative h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth ${isConnected ? "snap-y snap-mandatory" : ""}`}>
       
-      {/* El fondo debe ser fijo para que no se corte al hacer scroll hacia abajo */}
+      {/* Fondo fijo */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <BgGradient
           gradientFrom="#ffffff"
@@ -98,7 +99,8 @@ export default function LandingPage() {
         <div className="flex w-full flex-col">
           
           {/* PANTALLA 1: Bienvenida */}
-          <section className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+          {/* Añadimos h-screen, shrink-0 y snap-center para que encaje exacto */}
+          <section className="flex h-screen w-full shrink-0 snap-center flex-col items-center justify-center px-6 text-center">
             <motion.span
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -143,15 +145,14 @@ export default function LandingPage() {
             </motion.div>
           </section>
 
-          {/* PANTALLAS 2, 3 y 4: Las Analogías (Generadas con un map) */}
-          {tutorialSteps.map((step, index) => (
+          {/* PANTALLAS 2, 3 y 4: Las Analogías */}
+          {tutorialSteps.map((step) => (
             <section 
               key={step.title}
-              className="flex min-h-screen flex-col items-center justify-center px-6 py-20 text-center"
+              className="flex h-screen w-full shrink-0 snap-center flex-col items-center justify-center px-6 py-20 text-center"
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 50 }}
-                // amount: 0.6 significa que la animación arranca cuando el 60% de la sección es visible
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.6 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
@@ -171,7 +172,7 @@ export default function LandingPage() {
           ))}
 
           {/* PANTALLA 5: Call To Action Final */}
-          <section className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+          <section className="flex h-screen w-full shrink-0 snap-center flex-col items-center justify-center px-6 text-center">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -202,9 +203,9 @@ export default function LandingPage() {
         /* =========================================================
            ESTADO NO LOGGEADO: LANDING ORIGINAL
            ========================================================= */
-        <>
+        <div className="flex w-full flex-col">
           {/* HERO */}
-          <section className="relative mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 pb-24 pt-16 lg:flex-row lg:pt-24">
+          <section className="relative mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center gap-12 px-6 py-24 lg:flex-row">
             <div className="flex-1 text-center lg:text-left">
               <motion.span
                 initial={{ opacity: 0, y: 16 }}
@@ -286,7 +287,7 @@ export default function LandingPage() {
           </section>
 
           {/* FRANJA DE FEATURES */}
-          <section className="relative mx-auto -mt-6 max-w-6xl px-6 pb-20">
+          <section className="relative mx-auto max-w-6xl px-6 pb-20">
             <div className="grid gap-5 md:grid-cols-3">
               {[
                 {
@@ -322,7 +323,7 @@ export default function LandingPage() {
               ))}
             </div>
           </section>
-        </>
+        </div>
       )}
     </div>
   );
