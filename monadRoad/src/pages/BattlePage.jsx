@@ -133,7 +133,7 @@ export default function BattlePage() {
       // Step 1: Save deck on-chain in DeckManager contract
       const ids = selectedIds.map((id) => {
         const card = ownedCards.find((c) => c.id === id);
-        return card ? card.tokenId : 0;
+        return card ? card.nftTokenId : 0;
       }).filter(Boolean);
       const tx = await writeContractAsync({
         address: CONTRACT_ADDRESSES.DECK_MANAGER,

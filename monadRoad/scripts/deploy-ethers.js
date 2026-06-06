@@ -42,7 +42,7 @@ async function main() {
     nftCardsArtifact.bytecode,
     wallet
   );
-  const nftCards = await NFTCardsFactory.deploy("ipfs://QmDemoBaseURI/");
+  const nftCards = await NFTCardsFactory.deploy();
   await nftCards.waitForDeployment();
   const nftCardsAddress = await nftCards.getAddress();
   console.log(`✅ MonadRoad_NFTCards desplegado en: ${nftCardsAddress}`);

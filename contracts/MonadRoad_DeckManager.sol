@@ -4,14 +4,13 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IMonadRoad_NFTCards {
-    function balanceOf(address account, uint256 id) external view returns (uint256);
-    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids) external view returns (uint256[] memory);
+    function ownerOf(uint256 tokenId) external view returns (address);
 }
 
 contract MonadRoad_DeckManager is Ownable {
     IMonadRoad_NFTCards public nftCardsContract;
 
-    // Mapping from player to their active deck (array of card IDs)
+    // Mapping from player to their active deck (array of NFT tokenIds)
     mapping(address => uint256[]) private activeDecks;
 
     event DeckSaved(address indexed player, uint256[] deckIds);
@@ -27,10 +26,10 @@ contract MonadRoad_DeckManager is Ownable {
     function saveDeck(uint256[] calldata deckIds) external {
         require(deckIds.length > 0 && deckIds.length <= 10, "Invalid deck size");
 
-        // Validate that the player owns all the cards they want to put in their deck
+        // Validate that the player owns all the NFT tokenIds they want to put in their deck
         for (uint i = 0; i < deckIds.length; i++) {
-            uint256 balance = nftCardsContract.balanceOf(msg.sender, deckIds[i]);
-            require(balance > 0, "You do not own all cards in this deck");
+            address owner = nftCardsContract.ownerOf(deckIds[i]);
+            require(owner == msg.sender, "You do not own all cards in this deck");
         }
 
         activeDecks[msg.sender] = deckIds;
@@ -46,7 +45,11 @@ contract MonadRoad_DeckManager is Ownable {
         if (deck.length == 0) return false;
 
         for (uint i = 0; i < deck.length; i++) {
-            if (nftCardsContract.balanceOf(player, deck[i]) == 0) {
+            try nftCardsContract.ownerOf(deck[i]) returns (address owner) {
+                if (owner != player) {
+                    return false;
+                }
+            } catch {
                 return false;
             }
         }

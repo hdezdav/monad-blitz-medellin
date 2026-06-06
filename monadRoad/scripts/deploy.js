@@ -6,7 +6,7 @@ async function main() {
 
   // 1. Deploy NFTCards
   const NFTCards = await ethers.getContractFactory("MonadRoad_NFTCards");
-  const nftCards = await NFTCards.deploy("ipfs://QmDemoBaseURI/");
+  const nftCards = await NFTCards.deploy();
   await nftCards.waitForDeployment();
   const nftCardsAddress = await nftCards.getAddress();
   console.log(`✅ MonadRoad_NFTCards desplegado en: ${nftCardsAddress}`);

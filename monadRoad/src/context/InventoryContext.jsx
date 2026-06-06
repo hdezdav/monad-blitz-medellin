@@ -8,15 +8,12 @@ const InventoryContext = createContext(null)
 export function InventoryProvider({ children }) {
   const { address } = useAccount()
 
-  // 1. Fetch balances of all 10 cards from NFT_CARDS contract on-chain
-  const { data: balances, refetch: refetchBalances, isLoading: isLoadingBalances } = useReadContract({
+  // 1. Fetch owned cards (ERC721) using our optimized view function
+  const { data: ownedCardsData, refetch: refetchBalances, isLoading: isLoadingBalances } = useReadContract({
     address: CONTRACT_ADDRESSES.NFT_CARDS,
     abi: NFT_CARDS_ABI,
-    functionName: 'balanceOfBatch',
-    args: address ? [
-      Array(10).fill(address),
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    ] : undefined,
+    functionName: 'getOwnedCards',
+    args: address ? [address] : undefined,
     query: {
       enabled: !!address,
     }
@@ -33,21 +30,29 @@ export function InventoryProvider({ children }) {
     }
   });
 
-  // Derive ownedCardIds based on balances returned from ERC1155 contract
-  const ownedCardIds = useMemo(() => {
-    if (!balances) return [];
-    return balances
-      .map((bal, idx) => (bal > 0n ? idx + 1 : null))
-      .filter((id) => id !== null);
-  }, [balances]);
+  // Resolve full card objects from the catalog matching on cardCatalogId
+  const ownedCards = useMemo(() => {
+    if (!ownedCardsData) return [];
+    return ownedCardsData.map((item) => {
+      // Support both object return and array tuple return from Viem
+      const tokenId = Number(item.tokenId ?? item[0]);
+      const cardCatalogId = Number(item.cardCatalogId ?? item[1]);
+      
+      const baseCard = heroCards.find((c) => c.tokenId === cardCatalogId);
+      if (!baseCard) return null;
+      
+      return {
+        ...baseCard,
+        id: `${baseCard.id}-${tokenId}`, // Unique string ID for React keys and selection
+        nftTokenId: tokenId,            // Unique on-chain NFT tokenId
+        tokenId: cardCatalogId,         // Base catalog ID (1 to 10)
+      };
+    }).filter(Boolean);
+  }, [ownedCardsData]);
 
-  // Resolve full card objects from the catalog matching on tokenId
-  const ownedCards = useMemo(
-    () => ownedCardIds
-      .map((tokenId) => heroCards.find((c) => c.tokenId === tokenId))
-      .filter(Boolean),
-    [ownedCardIds]
-  );
+  const ownedCardIds = useMemo(() => {
+    return ownedCards.map((c) => c.id);
+  }, [ownedCards]);
 
   // Check if player has registered / opened their pack
   const hasOpenedPack = useMemo(() => {
@@ -101,7 +106,7 @@ export function InventoryProvider({ children }) {
     (cardId) => {
       // Support checking by string ID or numeric tokenId
       return ownedCards.some(
-        (c) => c.id === cardId || c.tokenId === Number(cardId)
+        (c) => c.id === cardId || c.id.split('-')[0] === cardId || c.tokenId === Number(cardId)
       );
     },
     [ownedCards]
