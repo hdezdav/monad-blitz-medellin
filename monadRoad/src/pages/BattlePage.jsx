@@ -15,6 +15,7 @@ import {
 
 import { GameCard } from "@/components/game-card";
 import { heroCards } from "@/data/cards";
+import { useInventory } from "@/context/InventoryContext";
 import { ROUTES } from "../routes/paths";
 import "./BattlePage.css";
 
@@ -58,6 +59,7 @@ function pickEnemy() {
    ════════════════════════════════════════════════════════════ */
 export default function BattlePage() {
   const { isConnected } = useAccount();
+  const { ownedCards, addCard } = useInventory();
 
   /* ── Game state ── */
   const [phase, setPhase] = useState(PHASE.PRE);
@@ -98,8 +100,8 @@ export default function BattlePage() {
   /* ── Start battle ── */
   const startBattle = useCallback(() => {
     const selectedCards = selectedIds.map((id) =>
-      heroCards.find((c) => c.id === id)
-    );
+      ownedCards.find((c) => c.id === id)
+    ).filter(Boolean);
     const hp = enemy.defense * HP_MULTIPLIER;
     setHand(selectedCards);
     setPlayedIndices([]);
@@ -111,7 +113,7 @@ export default function BattlePage() {
     setCombatLog([]);
     roundRef.current = 0;
     setPhase(PHASE.BATTLE);
-  }, [selectedIds, enemy]);
+  }, [selectedIds, enemy, ownedCards]);
 
   /* ── Play a card ── */
   const playCard = useCallback(
@@ -155,8 +157,11 @@ export default function BattlePage() {
           // Check if battle is over (after all 3 cards or enemy dead)
           const allPlayed = round >= MAX_HAND_SIZE;
           if (newHp <= 0 || allPlayed) {
+            const won = newHp <= 0;
+            // Future: this addCard call will trigger a contract mint/transfer
+            if (won) addCard(enemy.id);
             setTimeout(() => {
-              setDidWin(newHp <= 0);
+              setDidWin(won);
               setPhase(PHASE.POST);
             }, DAMAGE_DISPLAY_MS + 400);
           }
@@ -199,6 +204,19 @@ export default function BattlePage() {
               Conecta tu wallet para acceder a la arena y luchar contra
               oponentes on-chain.
             </p>
+          </div>
+        ) : ownedCards.length === 0 ? (
+          /* ── No cards yet ── */
+          <div className="battle-locked">
+            <span className="battle-locked__icon">📦</span>
+            <h3 className="battle-locked__title">No tienes cartas</h3>
+            <p className="battle-locked__desc">
+              Abre tu primer sobre de regalo para recibir cartas y poder
+              entrar en combate.
+            </p>
+            <Link to={ROUTES.pack} className="btn-start-battle" style={{ marginTop: 16 }}>
+              Abrir mi Sobre
+            </Link>
           </div>
         ) : (
           <>
@@ -279,7 +297,7 @@ export default function BattlePage() {
                       wallet ({selectedIds.length}/{MAX_HAND_SIZE})
                     </p>
                     <div className="card-selection__grid">
-                      {heroCards
+                      {ownedCards
                         .filter((c) => c.id !== enemy.id)
                         .map((card, i) => {
                           const isSelected = selectedIds.includes(card.id);

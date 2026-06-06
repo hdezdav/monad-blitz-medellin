@@ -1,16 +1,17 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { Gift } from "lucide-react";
+import { Gift, PackageOpen } from "lucide-react";
 
 import { BgGradient } from "@/components/ui/bg-gradient";
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/game-card";
-import { heroCards } from "@/data/cards";
+import { useInventory } from "@/context/InventoryContext";
 import { ROUTES } from "../routes/paths";
 
 export default function CardsPage() {
   const { isConnected } = useAccount();
+  const { ownedCards, hasOpenedPack } = useInventory();
 
   return (
     <div className="relative min-h-screen px-6 py-16">
@@ -43,7 +44,11 @@ export default function CardsPage() {
           transition={{ delay: 0.1 }}
           className="mx-auto mt-4 max-w-xl text-muted-foreground"
         >
-          Revisa las cartas NFT que posees y los conceptos técnicos de Blockchain que has dominado.
+          {isConnected
+            ? ownedCards.length > 0
+              ? `Tienes ${ownedCards.length} carta${ownedCards.length !== 1 ? "s" : ""} NFT en tu wallet.`
+              : "Aún no tienes cartas. ¡Abre tu primer sobre para empezar!"
+            : "Conecta tu wallet para visualizar tu colección de cartas NFT reales en Monad Testnet."}
         </motion.p>
       </div>
 
@@ -56,11 +61,34 @@ export default function CardsPage() {
               Conecta tu wallet para visualizar tu colección de cartas NFT reales en Monad Testnet.
             </p>
           </div>
+        ) : ownedCards.length === 0 ? (
+          /* Empty state — no cards yet */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center p-16 rounded-2xl border border-dashed border-border bg-white/50 backdrop-blur"
+          >
+            <PackageOpen className="h-16 w-16 text-muted-foreground/40 mb-4" />
+            <h3 className="text-lg font-bold text-monad-ink">
+              Tu colección está vacía
+            </h3>
+            <p className="text-sm text-muted-foreground mt-2 max-w-sm text-center">
+              Aún no tienes cartas NFT. Abre tu primer sobre de regalo para
+              recibir tu mazo inicial de 3 cartas.
+            </p>
+            <Button
+              asChild
+              className="mt-6 shadow-lg shadow-primary/30"
+            >
+              <Link to={ROUTES.pack}>Abrir mi Sobre</Link>
+            </Button>
+          </motion.div>
         ) : (
+          /* Card collection */
           <div className="grid grid-cols-1 justify-items-center gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {heroCards.map((card, i) => (
+            {ownedCards.map((card, i) => (
               <motion.div
-                key={card.name}
+                key={card.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
@@ -76,9 +104,16 @@ export default function CardsPage() {
         <Button asChild variant="outline" className="bg-white/60 backdrop-blur">
           <Link to={ROUTES.home}>Volver al inicio</Link>
         </Button>
-        <Button asChild className="shadow-lg shadow-primary/30">
-          <Link to={ROUTES.pack}>Abrir más sobres</Link>
-        </Button>
+        {ownedCards.length > 0 && (
+          <Button asChild className="shadow-lg shadow-primary/30">
+            <Link to={ROUTES.battle}>Ir a Combate</Link>
+          </Button>
+        )}
+        {!hasOpenedPack && (
+          <Button asChild className="shadow-lg shadow-primary/30">
+            <Link to={ROUTES.pack}>Abrir sobre</Link>
+          </Button>
+        )}
       </div>
     </div>
   );

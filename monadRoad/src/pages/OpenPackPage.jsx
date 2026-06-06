@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, PartyPopper } from "lucide-react";
@@ -8,14 +8,23 @@ import { BgGradient } from "@/components/ui/bg-gradient";
 import { Button } from "@/components/ui/button";
 import { GiftPack } from "@/components/gift-pack";
 import { heroCards } from "@/data/cards";
+import { useInventory } from "@/context/InventoryContext";
 import { ROUTES } from "../routes/paths";
 
 const starterPack = heroCards.slice(0, 3);
+const starterPackIds = starterPack.map((c) => c.id);
 
 export default function OpenPackPage() {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
+  const { hasOpenedPack, openPack } = useInventory();
   const [opened, setOpened] = useState(false);
+
+  const handleOpen = () => {
+    // Add the 3 starter pack cards to the wallet inventory
+    openPack(starterPackIds);
+    setOpened(true);
+  };
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-20">
@@ -59,19 +68,29 @@ export default function OpenPackPage() {
           ¡Abre tu <span className="text-gradient">sobre de regalo</span>!
         </h1>
         <p className="mt-4 max-w-lg text-lg text-muted-foreground">
-          {isConnected
-            ? "Tu wallet está vinculada. Abre el sobre para descubrir tus primeras cartas NFT y armar tu mazo inicial."
-            : "Conecta tu wallet para abrir tu primer sobre y empezar."}
+          {!isConnected
+            ? "Conecta tu wallet para abrir tu primer sobre y empezar."
+            : hasOpenedPack
+              ? "Ya abriste tu sobre inicial. ¡Revisa tus cartas o ve al combate!"
+              : "Tu wallet está vinculada. Abre el sobre para descubrir tus primeras cartas NFT y armar tu mazo inicial."}
         </p>
 
         <div className="mt-12">
           {isConnected ? (
-            <GiftPack
-              cards={starterPack}
-              onOpened={() => {
-                setOpened(true);
-              }}
-            />
+            hasOpenedPack && !opened ? (
+              /* Already opened in a previous session (future: from contract state) */
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex h-72 w-56 flex-col items-center justify-center rounded-3xl bg-primary/5 border-2 border-dashed border-primary/30 text-primary/60">
+                  <span className="text-4xl mb-2">📦</span>
+                  <p className="text-sm font-semibold">Sobre ya abierto</p>
+                </div>
+              </div>
+            ) : (
+              <GiftPack
+                cards={starterPack}
+                onOpened={handleOpen}
+              />
+            )
           ) : (
             <div className="flex h-72 w-56 flex-col items-center justify-center rounded-3xl bg-slate-100 border-2 border-dashed border-slate-300 text-slate-400">
               <span className="text-4xl mb-2">🔒</span>
@@ -80,11 +99,11 @@ export default function OpenPackPage() {
           )}
         </div>
 
-        {opened && (
+        {(opened || hasOpenedPack) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: starterPack.length * 0.15 + 0.3 }}
+            transition={{ delay: opened ? starterPack.length * 0.15 + 0.3 : 0 }}
             className="mt-12 flex gap-4"
           >
             <Button
