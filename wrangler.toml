@@ -1,3 +1,7 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "monadroad"
+compatibility_date = "2026-06-06"
 pages_build_output_dir = "monadRoad/dist"
+
+[assets]
+directory = "./monadRoad/dist"
