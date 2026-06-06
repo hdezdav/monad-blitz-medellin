@@ -1,7 +1,9 @@
 #:schema node_modules/wrangler/config-schema.json
-# wrangler.toml
-name = 'monad-blitz-medellin'
+name = "monad-blitz-medellin"
 compatibility_date = "2026-06-06"
+
+[build]
+command = "npm install --prefix monadRoad && npm run build --prefix monadRoad"
 
 [assets]
 directory = "./monadRoad/dist"
