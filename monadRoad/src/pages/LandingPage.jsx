@@ -1,61 +1,205 @@
-import { Link, useOutletContext } from 'react-router-dom'
-import { useAccount } from 'wagmi'
-import { ROUTES } from '../routes/paths'
-import './pages.css'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowRight, BookOpen, ShieldCheck, Trophy } from "lucide-react";
+import { useAccount } from "wagmi";
+import { useOutletContext } from "react-router-dom";
+
+import { BgGradient } from "@/components/ui/bg-gradient";
+import { Button } from "@/components/ui/button";
+import { MetaMaskButton } from "@/components/metamask-button";
+import { GameCard } from "@/components/game-card";
+import { heroCards } from "@/data/cards";
+import { ROUTES } from "../routes/paths";
+
+const fanCards = heroCards.slice(0, 3);
+const fanLayout = [
+  { rotate: -14, x: -150, y: 24, z: 10 },
+  { rotate: 0, x: 0, y: -10, z: 30 },
+  { rotate: 14, x: 150, y: 24, z: 10 },
+];
 
 export default function LandingPage() {
-  const { isConnected, address } = useAccount()
-  const { openWalletModal } = useOutletContext()
+  const navigate = useNavigate();
+  const { isConnected } = useAccount();
+  const { openWalletModal } = useOutletContext();
+  const [loading, setLoading] = useState(false);
+
+  const handleConnect = async () => {
+    setLoading(true);
+    try {
+      openWalletModal();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cta = isConnected ? () => navigate(ROUTES.pack) : handleConnect;
 
   return (
-    <>
-      <section className="card card--hero">
-        <span className="chip">Built on Monad</span>
-        <h1 className="hero-title">
-          Learn crypto.
-          <br />
-          <span className="hero-accent">Collect cards.</span>
-        </h1>
-        <p className="hero-desc">
-          {isConnected
-            ? 'Your wallet is ready. Explore packs, your collection, or enter battle.'
-            : 'Connect your wallet to get started on Monad Testnet.'}
-        </p>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Fondo degradado radial (claro → Monad púrpura) */}
+      <BgGradient
+        gradientFrom="#ffffff"
+        gradientTo="#a99dff"
+        gradientStop="38%"
+        gradientPosition="50% 0%"
+      />
 
-        {!isConnected ? (
-          <button className="btn btn--primary btn--large" onClick={openWalletModal}>
-            Connect Wallet
-          </button>
-        ) : (
-          <div className="status-card">
-            <div className="status-dot" />
-            <div>
-              <p className="status-label">Wallet address</p>
-              <p className="status-value">{address}</p>
-            </div>
-          </div>
-        )}
+      {/* HERO */}
+      <section className="relative mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 pb-24 pt-16 lg:flex-row lg:pt-24">
+        {/* Texto */}
+        <div className="flex-1 text-center lg:text-left">
+          <motion.span
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-white/70 px-4 py-1.5 text-sm font-medium text-monad-ink shadow-sm backdrop-blur"
+          >
+            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+            Aprende Web3 sin morir en el intento
+          </motion.span>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight text-monad-ink md:text-6xl"
+          >
+            Empieza a aprender{" "}
+            <span className="text-gradient">Blockchain</span>
+            <br /> jugando.
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground lg:mx-0"
+          >
+            <strong className="text-foreground">Monad Road</strong> convierte
+            cada concepto técnico en una carta. Conecta tu wallet, arma tu mazo y
+            domina la blockchain batalla a batalla.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-9 flex flex-col items-center gap-4 sm:flex-row lg:items-start lg:justify-start"
+          >
+            <MetaMaskButton onClick={cta} loading={loading} label={isConnected ? "Abrir mi sobre" : "Conectar con MetaMask"} />
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate(ROUTES.cards)}
+              className="h-12 gap-2 bg-white/60 px-6 text-base backdrop-blur"
+            >
+              Ver mis cartas <ArrowRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            Conexión Web3 real en Monad Testnet. Fricción cero para empezar. ✨
+          </p>
+        </div>
+
+        {/* Abanico de cartas del héroe */}
+        <div className="relative flex h-[26rem] flex-1 items-center justify-center">
+          {fanCards.map((card, i) => (
+            <motion.div
+              key={card.name}
+              className="absolute"
+              initial={{ opacity: 0, y: 80, rotate: 0 }}
+              animate={{
+                opacity: 1,
+                y: fanLayout[i].y,
+                x: fanLayout[i].x,
+                rotate: fanLayout[i].rotate,
+              }}
+              transition={{
+                delay: 0.3 + i * 0.15,
+                type: "spring",
+                stiffness: 120,
+                damping: 14,
+              }}
+              style={{ zIndex: fanLayout[i].z }}
+            >
+              <GameCard card={card} />
+            </motion.div>
+          ))}
+        </div>
       </section>
 
-      <div className="card-grid">
-        <Link to={ROUTES.pack} className="card card--pastel card--lavender card--link">
-          <span className="card-icon">📦</span>
-          <h2>Abrir sobre</h2>
-          <p>Descubre nuevas cartas en cada paquete.</p>
-        </Link>
+      {/* FRANJA DE FEATURES */}
+      <section className="relative mx-auto -mt-6 max-w-6xl px-6 pb-20">
+        <div className="grid gap-5 md:grid-cols-3">
+          {[
+            {
+              icon: BookOpen,
+              title: "Fase 1 · Fundamentos",
+              text: "Bloques, transacciones y wallets en combates equilibrados para no frustrarte.",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Fase 2 · Seguridad",
+              text: "Scams, phishing y hackeos. Aprende a usar 'counters' contra amenazas reales.",
+            },
+            {
+              icon: Trophy,
+              title: "Fase 3 · Web3",
+              text: "Smart Contracts, DeFi y gobernanza. Derrota al jefe final del ecosistema.",
+            },
+          ].map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="rounded-2xl border border-border bg-white/70 p-6 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:shadow-lg"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
+                <f.icon className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 text-lg font-bold text-monad-ink">{f.title}</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">{f.text}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-        <Link to={ROUTES.cards} className="card card--pastel card--mint card--link">
-          <span className="card-icon">🎴</span>
-          <h2>Mis cartas</h2>
-          <p>Revisa tu colección y el progreso obtenido.</p>
-        </Link>
+      {/* GALERÍA DE CARTAS */}
+      <section className="relative mx-auto max-w-6xl px-6 pb-28">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold tracking-tight text-monad-ink md:text-4xl">
+            Tu mazo inicial
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            Cada carta enseña un concept real. Pasa el cursor para verlas cobrar
+            vida.
+          </p>
+        </div>
 
-        <Link to={ROUTES.battle} className="card card--pastel card--peach card--link">
-          <span className="card-icon">⚔️</span>
-          <h2>Combate</h2>
-          <p>Enfrenta a otros jugadores con tu mazo.</p>
-        </Link>
-      </div>
-    </>
-  )
+        <div className="mt-12 grid grid-cols-2 justify-items-center gap-6 sm:grid-cols-3 lg:grid-cols-6">
+          {heroCards.map((card, i) => (
+            <motion.div
+              key={card.name}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: (i % 6) * 0.08 }}
+            >
+              <GameCard card={card} className="w-full max-w-[14rem]" />
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mt-14 flex justify-center">
+          <MetaMaskButton onClick={cta} loading={loading} label={isConnected ? "Reclamar mi sobre gratis" : "Conectar Wallet para empezar"} />
+        </div>
+      </section>
+    </div>
+  );
 }

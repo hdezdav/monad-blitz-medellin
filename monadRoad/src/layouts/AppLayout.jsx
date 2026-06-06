@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, useLocation, Outlet } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAccount, useDisconnect } from 'wagmi'
+import { Route } from 'lucide-react'
 import WalletModal from '../components/WalletModal'
 import { ROUTES } from '../routes/paths'
-import '../App.css'
+import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { to: ROUTES.home, label: 'Inicio' },
@@ -16,57 +18,66 @@ export default function AppLayout() {
   const { isConnected, address } = useAccount()
   const { disconnect } = useDisconnect()
   const [showModal, setShowModal] = useState(false)
+  const { pathname } = useLocation()
 
   const truncate = (addr) => (addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '')
 
   return (
-    <div className="app">
-      <div className="pastel-block pastel-block--lavender" aria-hidden="true" />
-      <div className="pastel-block pastel-block--mint" aria-hidden="true" />
-      <div className="pastel-block pastel-block--peach" aria-hidden="true" />
-
-      <div className="app-inner">
-        <header className="card card--header">
-          <Link to={ROUTES.home} className="brand">
-            <img src="/logo.png" alt="" className="brand-logo" />
-            <div>
-              <span className="brand-name">Monad Road</span>
-              <span className="brand-tag">Testnet</span>
-            </div>
+    <div className="relative min-h-screen">
+      <motion.header
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="sticky top-0 z-50 w-full"
+      >
+        <div className="glass mx-auto mt-4 flex w-[min(1100px,92%)] items-center justify-between rounded-2xl border border-border px-5 py-3 shadow-sm">
+          <Link to={ROUTES.home} className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-monad to-monad-dark text-white shadow-md">
+              <Route className="h-5 w-5" />
+            </span>
+            <span className="text-lg font-extrabold tracking-tight text-monad-ink">
+              Monad<span className="text-primary">Road</span>
+            </span>
           </Link>
 
+          <nav className="hidden items-center gap-1 md:flex">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+                  (item.to === ROUTES.home ? pathname === ROUTES.home : pathname.startsWith(item.to)) && "bg-secondary text-foreground"
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
           {isConnected ? (
-            <div className="header-actions">
-              <span className="chip chip--success">Connected</span>
-              <span className="wallet-address">{truncate(address)}</span>
-              <button className="btn btn--ghost" onClick={() => disconnect()}>
-                Disconnect
-              </button>
-            </div>
+            <button
+              onClick={() => disconnect()}
+              className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-1.5 text-sm font-semibold text-monad-ink transition hover:bg-accent"
+              title="Desconectar"
+            >
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              {truncate(address)}
+            </button>
           ) : (
-            <button className="btn btn--primary" onClick={() => setShowModal(true)}>
-              Connect Wallet
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 rounded-xl bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+            >
+              Conectar Wallet
             </button>
           )}
-        </header>
+        </div>
+      </motion.header>
 
-        <nav className="app-nav">
-          {NAV_ITEMS.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === ROUTES.home}
-              className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link--active' : ''}`}
-            >
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <main className="main">
-          <Outlet context={{ openWalletModal: () => setShowModal(true) }} />
-        </main>
-      </div>
+      <main className="relative z-10">
+        <Outlet context={{ openWalletModal: () => setShowModal(true) }} />
+      </main>
 
       <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} />
     </div>
