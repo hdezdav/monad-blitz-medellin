@@ -89,7 +89,20 @@ export default function LandingPage() {
             transition={{ delay: 0.3 }}
             className="mt-9 flex flex-col items-center gap-4 sm:flex-row lg:items-start lg:justify-start"
           >
-            <MetaMaskButton onClick={cta} loading={loading} label={isConnected ? "Abrir mi sobre" : "Conectar con MetaMask"} />
+            {isConnected ? (
+              <motion.button
+                type="button"
+                onClick={cta}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="group relative inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-monad to-monad-dark px-8 text-base font-bold text-white shadow-xl shadow-monad/30 border border-monad-dark/50 animate-purple-glow transition-all"
+              >
+                <span>Abrir mi sobre</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </motion.button>
+            ) : (
+              <MetaMaskButton onClick={cta} loading={loading} label="Conectar con MetaMask" />
+            )}
             <Button
               variant="outline"
               size="lg"
@@ -197,7 +210,20 @@ export default function LandingPage() {
         </div>
 
         <div className="mt-14 flex justify-center">
-          <MetaMaskButton onClick={cta} loading={loading} label={isConnected ? "Reclamar mi sobre gratis" : "Conectar Wallet para empezar"} />
+          {isConnected ? (
+            <motion.button
+              type="button"
+              onClick={cta}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="group relative inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-monad to-monad-dark px-8 text-base font-bold text-white shadow-xl shadow-monad/30 border border-monad-dark/50 animate-purple-glow transition-all"
+            >
+              <span>Reclamar mi sobre gratis</span>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </motion.button>
+          ) : (
+            <MetaMaskButton onClick={cta} loading={loading} label="Conectar Wallet para empezar" />
+          )}
         </div>
       </section>
     </div>
