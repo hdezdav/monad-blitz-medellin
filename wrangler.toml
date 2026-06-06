@@ -1,5 +1,6 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "monadroad"
+# wrangler.toml
+name = 'monad-blitz-medellin'
 compatibility_date = "2026-06-06"
 
 [assets]
