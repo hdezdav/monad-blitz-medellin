@@ -1,0 +1,121 @@
+/* ── FloatingCards wrapper ── */
+.fc-wrapper {
+  position: relative;
+  width: 100%;
+  height: 42rem;
+  perspective: 120rem;
+  pointer-events: none;
+}
+
+/* ── 3-D slider stack ── */
+.fc-slider {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0) rotateX(0deg) rotateY(-25deg) rotateZ(-120deg);
+  transform-style: preserve-3d;
+  transition: transform 0.1s linear;
+  pointer-events: auto;
+}
+
+/* Each card in the stack */
+.fc-card {
+  position: relative;
+  left: 0;
+  width: 17rem;
+  height: 24rem;
+  margin: -6rem 0;         /* overlap to create a fan/stack feel */
+  transition: left 0.4s cubic-bezier(0.4, 1.35, 0.5, 0.97);
+  cursor: pointer;
+}
+
+/* ── Card inner with holographic border ── */
+.fc-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 1.4rem;
+  overflow: hidden;
+  background: #1a1a2e;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(124, 58, 237, 0.35);
+}
+
+.fc-card:nth-child(odd) .fc-card-inner {
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.fc-card:nth-child(3n) .fc-card-inner {
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+/* ── Card image ── */
+.fc-card-img {
+  width: 100%;
+  height: 70%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Bottom label area ── */
+.fc-card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 8, 24, 0.6) 0%,
+    rgba(10, 8, 24, 0.97) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 1rem 1.2rem 1.2rem;
+  gap: 0.3rem;
+}
+
+.fc-card-rarity {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
+.fc-card-label {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+/* ── Holographic shine overlay ── */
+.fc-card-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.4rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 40%,
+    rgba(139, 92, 246, 0.06) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.fc-card:hover .fc-card-shine {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    transparent 40%,
+    rgba(139, 92, 246, 0.14) 60%,
+    transparent 100%
+  );
+}

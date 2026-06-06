@@ -1,0 +1,145 @@
+/* ── StackedCards scene ── */
+
+.sc-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 900px;
+  overflow: hidden;
+}
+
+/* ── The stack wrapper ── */
+.sc-stack {
+  position: relative;
+  width: 19rem;
+  height: 28rem;
+}
+
+/* ── Each individual card ── */
+.sc-card {
+  position: absolute;
+  left: 50%;
+  width: 17rem;
+  height: 24rem;
+  transform: translateX(-50%) translateY(calc(var(--i) * -2.4rem)) rotate(calc(var(--i) * -2.5deg));
+  animation: cardFloat 4s ease-in-out infinite alternate;
+  animation-delay: var(--animation-delay, 0s);
+  transition: transform 0.4s cubic-bezier(0.4, 1.35, 0.5, 0.97);
+  cursor: pointer;
+}
+
+.sc-card:hover {
+  transform: translateX(-50%) translateY(calc(var(--i) * -2.4rem - 1.6rem)) rotate(calc(var(--i) * -2.5deg)) scale(1.04);
+  z-index: 99 !important;
+}
+
+@keyframes cardFloat {
+  0%   { translate: 0 0; }
+  100% { translate: 0 -0.8rem; }
+}
+
+/* Stagger float per card via --i */
+.sc-card:nth-child(1) { animation-duration: 3.8s; }
+.sc-card:nth-child(2) { animation-duration: 4.2s; animation-direction: alternate-reverse; }
+.sc-card:nth-child(3) { animation-duration: 3.6s; }
+.sc-card:nth-child(4) { animation-duration: 4.5s; animation-direction: alternate-reverse; }
+.sc-card:nth-child(5) { animation-duration: 3.9s; }
+
+/* ── Card inner ── */
+.sc-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 1.4rem;
+  overflow: hidden;
+  background: #12102a;
+  border: 2px solid var(--border, rgba(139, 92, 246, 0.4));
+  box-shadow:
+    0 1.2rem 3.2rem rgba(0, 0, 0, 0.45),
+    0 0.4rem 0.8rem rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+
+/* ── Card image (top 65%) ── */
+.sc-card-img {
+  width: 100%;
+  height: 65%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Card info (bottom 35%) ── */
+.sc-card-body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 38%;
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 6, 20, 0.55) 0%,
+    rgba(8, 6, 20, 0.97) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0.9rem 1.2rem 1.1rem;
+  gap: 0.25rem;
+}
+
+.sc-rarity {
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  line-height: 1;
+}
+
+.sc-label {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+/* ── Holographic shine ── */
+.sc-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.4rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    transparent 45%,
+    rgba(139, 92, 246, 0.08) 65%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.sc-card:hover .sc-shine {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.20) 0%,
+    transparent 45%,
+    rgba(139, 92, 246, 0.16) 65%,
+    transparent 100%
+  );
+}
+
+/* ── Ambient glow under the stack ── */
+.sc-glow {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20rem;
+  height: 6rem;
+  background: radial-gradient(ellipse, rgba(124, 58, 237, 0.35) 0%, transparent 70%);
+  filter: blur(1.2rem);
+  pointer-events: none;
+  z-index: 0;
+}

@@ -1,48 +1,49 @@
 .app {
   position: relative;
   min-height: 100vh;
-  overflow: hidden;
+  background: var(--bg);
 }
 
 .app-inner {
   position: relative;
   z-index: 1;
-  max-width: 960px;
+  max-width: 96rem;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 2.4rem 2.4rem 6.4rem;
 }
 
-/* ── Pastel background blocks ── */
+/* ── Decorative blobs — very subtle on light ── */
 .pastel-block {
   position: fixed;
-  border-radius: 40px;
+  border-radius: 50%;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.55;
+  filter: blur(10rem);
+  opacity: 0.35;
 }
 
 .pastel-block--lavender {
-  width: 320px;
-  height: 320px;
-  top: -80px;
-  right: -60px;
-  background: var(--pastel-lavender);
+  width: 56rem;
+  height: 56rem;
+  top: -20rem;
+  right: -14rem;
+  background: #ddd6fe;
 }
 
 .pastel-block--mint {
-  width: 260px;
-  height: 260px;
-  bottom: 10%;
-  left: -80px;
-  background: var(--pastel-mint);
+  width: 40rem;
+  height: 40rem;
+  bottom: 0;
+  left: -14rem;
+  background: #d1fae5;
 }
 
 .pastel-block--peach {
-  width: 200px;
-  height: 200px;
-  top: 45%;
-  right: 8%;
-  background: var(--pastel-peach);
+  width: 28rem;
+  height: 28rem;
+  top: 55%;
+  right: 3%;
+  background: #fed7aa;
 }
 
 /* ── Card base ── */
@@ -50,95 +51,193 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
-/* ── Header ── */
-.card--header {
+/* ── Top bar (full-bleed, sticky over the story scroll) ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(1.6rem);
+  -webkit-backdrop-filter: blur(1.6rem);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 20px 28px;
-  margin-bottom: 24px;
+  gap: 1.6rem;
+  max-width: 96rem;
+  margin: 0 auto;
+  padding: 1.2rem 2.4rem;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 1.2rem;
 }
 
 .brand-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 0.9rem;
 }
 
 .brand-name {
   display: block;
-  font-size: 18px;
+  font-size: 1.6rem;
   font-weight: 600;
   color: var(--text-heading);
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .brand-tag {
   display: block;
-  font-size: 12px;
+  font-size: 1.05rem;
   font-weight: 500;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 1rem;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
 .wallet-address {
-  font-size: 13px;
+  font-size: 1.3rem;
   font-weight: 500;
   color: var(--text-muted);
   background: var(--bg);
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Chips ── */
 .chip {
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
-  background: var(--pastel-sky);
-  border-radius: 100px;
-  font-size: 12px;
+  gap: 0.5rem;
+  padding: 0.5rem 1.2rem;
+  background: var(--consumer-purple-light);
+  border-radius: var(--radius-pill);
+  font-size: 1.2rem;
   font-weight: 500;
-  color: var(--text);
-  margin-bottom: 20px;
+  color: var(--consumer-purple);
+  margin-bottom: 1.6rem;
 }
 
 .chip--success {
-  background: var(--pastel-mint);
-  color: #2d6a4f;
+  background: var(--consumer-green-light);
+  color: var(--consumer-green);
   margin-bottom: 0;
 }
 
-/* ── Hero card ── */
-.card--hero {
-  padding: 40px 36px;
-  margin-bottom: 20px;
+.chip--success::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--consumer-green);
+  border-radius: 50%;
+}
+
+/* ── Hero — two-panel split ── */
+.hero-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 52rem;
+  margin-bottom: 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* LEFT — dark panel with floating stacked cards */
+.hero-cards-col {
+  position: relative;
+  background: linear-gradient(145deg, #0c0920 0%, #150e35 45%, #08061a 100%);
+  overflow: hidden;
+  min-height: 52rem;
+}
+
+.hero-cards-col::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 35% 55%, rgba(124, 58, 237, 0.28) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 25%, rgba(139, 92, 246, 0.16) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Floating label at the bottom of the cards col */
+.hero-cards-label {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(0.8rem);
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 1.4rem;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.cards-label-dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* RIGHT — wallet panel column */
+.hero-panel-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.2rem 3.2rem;
+  background: var(--surface);
+}
+
+/* Connected state panel */
+.connected-panel {
+  width: 100%;
+  max-width: 40rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .hero-title {
-  font-size: clamp(28px, 5vw, 42px);
-  font-weight: 600;
-  line-height: 1.25;
+  font-size: clamp(3.2rem, 4.5vw, 4.8rem);
+  font-weight: 700;
+  line-height: 1.1;
   color: var(--text-heading);
-  margin-bottom: 16px;
-  letter-spacing: -0.5px;
+  margin-bottom: 1.4rem;
+  letter-spacing: -0.04em;
+  animation: fromBottom var(--spring-ease-duration) var(--spring-ease) both;
 }
 
 .hero-accent {
@@ -146,143 +245,268 @@
 }
 
 .hero-desc {
-  font-size: 15px;
+  font-size: 1.6rem;
   line-height: 1.65;
   color: var(--text-muted);
-  max-width: 480px;
-  margin-bottom: 28px;
+  max-width: 44rem;
+  margin-bottom: 3rem;
+  font-weight: 400;
+  animation: fromBottom var(--spring-ease-duration) var(--spring-ease) 0.08s both;
 }
 
 /* ── Status card (connected) ── */
 .status-card {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 18px 20px;
-  background: var(--pastel-mint);
-  border-radius: var(--radius-sm);
-  margin-top: 8px;
+  gap: 1.2rem;
+  padding: 1.4rem 1.6rem;
+  background: var(--consumer-green-light);
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius);
+  margin-top: 0.8rem;
 }
 
 .status-dot {
-  width: 10px;
-  height: 10px;
-  margin-top: 5px;
-  background: var(--success);
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-top: 0.6rem;
+  background: var(--consumer-green);
   border-radius: 50%;
   flex-shrink: 0;
+  position: relative;
+}
+
+.status-dot::after {
+  content: '';
+  position: absolute;
+  inset: -0.3rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--consumer-green);
+  opacity: 0;
+  animation: pulseRing 2s ease-out infinite;
 }
 
 .status-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--consumer-green);
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
 }
 
 .status-value {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-heading);
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #374151;
   word-break: break-all;
+  font-variant-numeric: tabular-nums;
 }
 
-/* ── Card grid ── */
+/* ── Feature section (below the story scroll) ── */
+.app-inner--cards {
+  padding-top: 6.4rem;
+}
+
+.section-head {
+  text-align: center;
+  margin-bottom: 3.2rem;
+}
+
+.section-title {
+  font-size: clamp(2.4rem, 3.5vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-heading);
+}
+
+.section-sub {
+  margin-top: 0.8rem;
+  font-size: 1.6rem;
+  color: var(--text-muted);
+}
+
+/* ── Feature card grid ── */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 1.2rem;
 }
 
-.card--pastel {
-  padding: 28px 24px;
-  border: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* ── Collectible-style feature cards ── */
+.card--feature {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    transform var(--spring-ease-duration) var(--spring-ease),
+    box-shadow var(--spring-ease-duration) var(--spring-ease),
+    border-color var(--spring-ease-duration) var(--spring-ease);
+  will-change: transform;
 }
 
-.card--pastel:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-hover);
+.card--feature:hover {
+  transform: translate3d(0, -0.4rem, 0);
+  box-shadow: var(--shadow-lg);
 }
 
-.card--lavender {
-  background: var(--pastel-lavender);
+.card--feature:active {
+  transform: scale(0.97);
+  transition-duration: 0.12s;
 }
 
-.card--mint {
-  background: var(--pastel-mint);
-}
+/* Coloured top bar per card type */
+.card--learn { border-top: 4px solid #10b981; }
+.card--collect { border-top: 4px solid #8b5cf6; }
+.card--play { border-top: 4px solid #f59e0b; }
 
-.card--peach {
-  background: var(--pastel-peach);
-}
+.card--learn:hover { border-color: #10b981; }
+.card--collect:hover { border-color: #8b5cf6; }
+.card--play:hover { border-color: #f59e0b; }
 
-.card-icon {
+/* Emoji badge at the top */
+.feature-badge {
+  font-size: 2.8rem;
+  padding: 2rem 2.2rem 1rem;
   display: block;
-  font-size: 28px;
-  margin-bottom: 14px;
+  line-height: 1;
 }
 
-.card--pastel h2 {
-  font-size: 16px;
-  font-weight: 600;
+.feature-content {
+  padding: 0 2.2rem 2.4rem;
+}
+
+/* Rarity tag */
+.feature-rarity {
+  display: inline-block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #10b981;
+  margin-bottom: 0.8rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: var(--radius-pill);
+  padding: 0.25rem 0.9rem;
+}
+
+.feature-rarity--epic {
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.feature-rarity--legendary {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.card--feature h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
   color: var(--text-heading);
-  margin-bottom: 8px;
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.02em;
 }
 
-.card--pastel p {
-  font-size: 13px;
-  line-height: 1.55;
+.card--feature p {
+  font-size: 1.4rem;
+  line-height: 1.6;
   color: var(--text-muted);
 }
+
+/* Subtle glow in bottom-right corner */
+.feature-glow {
+  position: absolute;
+  bottom: -3rem;
+  right: -3rem;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 50%;
+  opacity: 0.12;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card--learn .feature-glow  { background: #10b981; }
+.card--collect .feature-glow { background: #8b5cf6; }
+.card--play .feature-glow    { background: #f59e0b; }
+
+.card--feature:hover .feature-glow { opacity: 0.25; }
 
 /* ── Buttons ── */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 22px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
+  gap: 0.8rem;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-pill);
+  font-size: 1.4rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all var(--spring-ease-duration) var(--spring-ease);
+  will-change: transform;
+  letter-spacing: -0.01em;
+}
+
+.btn:active {
+  transform: scale(0.96);
+  transition-duration: 0.1s;
 }
 
 .btn--primary {
-  background: var(--accent);
-  color: #fff;
+  background: var(--text-heading);
+  color: #ffffff;
 }
 
 .btn--primary:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 4px 16px rgba(124, 108, 240, 0.3);
+  background: #1f2937;
+  transform: translate3d(0, -0.1rem, 0);
+  box-shadow: var(--shadow-md);
 }
 
 .btn--large {
-  padding: 14px 32px;
-  font-size: 15px;
+  padding: 1.2rem 2.8rem;
+  font-size: 1.5rem;
 }
 
 .btn--ghost {
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
 }
 
 .btn--ghost:hover {
-  background: #e8e8ec;
+  border-color: var(--border-focus);
+  background: var(--bg);
 }
 
 /* ── Responsive ── */
+@media (max-width: 1024px) {
+  .hero-split {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-cards-col {
+    min-height: 36rem;
+  }
+
+  .hero-panel-col {
+    padding: 3.2rem 2.4rem;
+  }
+}
+
 @media (max-width: 768px) {
   .app-inner {
-    padding: 20px 16px 48px;
+    padding: 1.6rem 1.6rem 4.8rem;
   }
 
   .card--header {
     flex-direction: column;
     align-items: flex-start;
-    padding: 18px 20px;
+    padding: 1.4rem 1.6rem;
   }
 
   .header-actions {
@@ -290,12 +514,17 @@
     justify-content: flex-start;
   }
 
-  .card--hero {
-    padding: 28px 22px;
+  .hero-cards-col {
+    min-height: 30rem;
+  }
+
+  .hero-panel-col {
+    padding: 2.4rem 2rem;
   }
 
   .card-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }
 
@@ -307,5 +536,9 @@
 
   .wallet-address {
     text-align: center;
+  }
+
+  .hero-panel-col {
+    padding: 2rem 1.6rem;
   }
 }

@@ -1,30 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap');
 
 :root {
-  --bg: #f0f0f2;
+  --consumer-purple: #7c3aed;
+  --consumer-purple-light: #ede9fe;
+  --consumer-purple-mid: #8b5cf6;
+  --consumer-green: #16a34a;
+  --consumer-green-light: #dcfce7;
+  --consumer-orange: #ea580c;
+  --consumer-orange-light: #ffedd5;
+
+  --bg: #f5f5f7;
   --surface: #ffffff;
-  --border: #e8e8ec;
+  --surface-2: #fafafa;
+  --border: #e5e7eb;
+  --border-focus: #d1d5db;
 
-  --text: #2d2d35;
-  --text-muted: #7a7a88;
-  --text-heading: #1a1a22;
+  --text: #374151;
+  --text-muted: #9ca3af;
+  --text-heading: #111827;
 
-  --pastel-lavender: #e8e0ff;
-  --pastel-mint: #d8f5e8;
-  --pastel-peach: #ffe8dc;
-  --pastel-sky: #dceeff;
-  --pastel-yellow: #fff4d6;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
 
-  --accent: #7c6cf0;
-  --accent-hover: #6b5ce0;
-  --success: #34c759;
-  --danger: #ff6b6b;
+  --font: 'Inter', 'Helvetica Neue', system-ui, sans-serif;
+  --radius: 1.4rem;
+  --radius-sm: 0.8rem;
+  --radius-pill: 999px;
 
-  --font: 'Poppins', system-ui, -apple-system, sans-serif;
-  --radius: 20px;
-  --radius-sm: 14px;
-  --shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
-  --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
+
+  --motion: 1;
+  --spring-ease: cubic-bezier(0.4, 1.35, 0.5, 0.97);
+  --spring-ease-duration: calc(var(--motion) * 0.4s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion: 0; }
 }
 
 *, *::before, *::after {
@@ -34,11 +48,13 @@
 }
 
 html {
+  font-size: 10px;
   scroll-behavior: smooth;
 }
 
 body {
   font-family: var(--font);
+  font-size: 1.6rem;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -59,4 +75,18 @@ button {
   font-family: inherit;
   border: none;
   cursor: pointer;
+}
+
+@keyframes fromBottom {
+  0%   { transform: translate3d(0, 1.6rem, 0); opacity: 0; }
+  100% { transform: translate3d(0, 0, 0); opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
 }
