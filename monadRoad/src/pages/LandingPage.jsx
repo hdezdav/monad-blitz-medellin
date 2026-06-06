@@ -80,7 +80,7 @@ export default function LandingPage() {
   return (
     // Limitamos a h-screen (100% del alto) y activamos scroll interno.
     // Si está conectado, activamos el "snap-y" para el efecto magnético.
-    <div className={`relative h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth ${isConnected ? "snap-y snap-mandatory" : ""}`}>
+    <div className={`relative h-screen w-full overflow-x-hidden overflow-y-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isConnected ? "snap-y snap-mandatory" : ""}`}>
       
       {/* Fondo fijo */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
@@ -140,7 +140,7 @@ export default function LandingPage() {
                 animate={{ y: [0, 10, 0] }}
                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
               >
-                <ChevronDown className="h-8 w-8 text-monad-purple" />
+                <ChevronDown className="h-8 w-8 text-primary" />
               </motion.div>
             </motion.div>
           </section>
@@ -163,7 +163,7 @@ export default function LandingPage() {
                 </div>
                 
                 <h2 className="text-4xl font-extrabold text-monad-ink md:text-6xl">{step.title}</h2>
-                <p className="mt-2 text-lg font-bold uppercase tracking-widest text-monad-purple">{step.subtitle}</p>
+                <p className="mt-2 text-lg font-bold uppercase tracking-widest text-primary">{step.subtitle}</p>
                 <p className="mt-8 text-xl leading-relaxed text-muted-foreground md:text-2xl">
                   {step.text}
                 </p>
@@ -189,9 +189,9 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   onClick={cta}
-                  className="h-16 gap-3 rounded-2xl bg-monad-purple px-12 text-xl font-bold text-white transition-all hover:scale-105 hover:bg-monad-ink hover:shadow-[0_0_30px_rgba(169,157,255,0.6)]"
+                  className="group relative inline-flex h-16 items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-monad to-monad-dark px-12 text-xl font-bold text-white shadow-xl shadow-monad/30 border border-monad-dark/50 animate-purple-glow transition-all hover:scale-105"
                 >
-                  Abrir mi primer sobre <ArrowRight className="h-6 w-6" />
+                  Abrir mi primer sobre <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
                 </Button>
               </div>
             </motion.div>
